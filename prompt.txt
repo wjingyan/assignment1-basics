@@ -1,0 +1,66 @@
+Analyze this codebase to generate or update `.github/copilot-instructions.md` for guiding AI coding agents to complete this comprehensive assignment. Focus on assignment_text since this is the assignment extracted from cs336_*.pdf. Also pay attention to the test files that are used to test various subassignment. Make sure the result generated code can run with the test code.
+Below are the main implementations of this assignment. These are function names, group them together. Points give a hint of complexity
+- tokenizer.py
+- Problem (train_bpe): BPE Tokenizer Training
+- Problem (train_bpe_tinystories): BPE Training on TinyStories
+- Problem (train_bpe_expts_owt): BPE Training on OpenWebText
+- Problem (tokenizer): Implementing the tokenizer
+- Problem (tokenizer_experiments): Experiments with tokenizers
+- lm.py
+- Problem (linear): Implementing the linear module (1 point)
+- Problem (embedding): Implement the embedding module (1 point)
+- Problem (rmsnorm): Root Mean Square Layer Normalization (1 point)
+- Problem (positionwise_feedforward): Implement the position-wise feed-forward network
+(2 points)
+- Problem (rope): Implement RoPE (2 points)
+- Problem (softmax): Implement softmax (1 point)
+- Problem (scaled_dot_product_attention): Implement scaled dot-product attention
+(5 points)
+- Problem (multihead_self_attention): Implement causal multi-head self-attention (5
+points)
+- Problem (transformer_block): Implement the Transformer block (3 points)
+- Problem (transformer_lm): Implementing the Transformer LM (3 points)
+- Problem (transformer_accounting): Transformer LM resource accounting (5 points)
+- train_trans_lm.py
+- Problem (cross_entropy): Implement Cross entropy
+- Problem (learning_rate_tuning): Tuning the learning rate (1 point)
+- Problem (adamw): Implement AdamW (2 points)
+- Problem (adamwAccounting): Resource accounting for training with AdamW (2 points)
+- Problem (learning_rate_schedule): Implement cosine learning rate schedule with
+warmup
+- Problem (gradient_clipping): Implement gradient clipping (1 point)
+- train_loop.py
+- Problem (data_loading): Implement data loading (2 points)
+- Problem (checkpointing): Implement model checkpointing (1 point)
+- Problem (training_together): Put it together (4 points)
+- gen_text.py
+- Problem (decoding): Decoding (3 points)
+- experiment.py
+- Problem (experiment_log): Experiment logging (3 points)
+- Problem (learning_rate): Tune the learning rate (3 points) (4 H100 hrs)
+- Problem (batch_size_experiment): Batch size variations (1 point) (2 H100 hrs)
+- Problem (generate): Generate text (1 point)
+- Problem (layer_norm_ablation): Remove RMSNorm and train (1 point) (1 H100 hr)
+- Problem (pre_norm_ablation): Implement post-norm and train (1 point) (1 H100 hr)
+- Problem (no_pos_emb): Implement NoPE (1 point) (1 H100 hr)
+- Problem (swiglu_ablation): SwiGLU vs. SiLU (1 point) (1 H100 hr)
+- Problem (main_experiment): Experiment on OWT (2 points) (3 H100 hrs)
+- Problem (leaderboard): Leaderboard (6 points) (10 H100 hrs)
+
+Focus on discovering the essential knowledge that would help an AI agents be immediately productive in this codebase. Consider aspects like:
+- The "big picture" architecture that requires reading multiple files to understand - major components, service boundaries, data flows, and the "why" behind structural decisions
+- Critical developer workflows (builds, tests, debugging) especially commands that aren't obvious from file inspection alone
+- Project-specific conventions and patterns that differ from common practices
+- Integration points, external dependencies, and cross-component communication patterns
+
+Source existing AI conventions from `**/{.github/copilot-instructions.md,AGENT.md,AGENTS.md,CLAUDE.md,.cursorrules,.windsurfrules,.clinerules,.cursor/rules/**,.windsurf/rules/**,.clinerules/**,README.md}` (do one glob search).
+
+Guidelines (read more at https://aka.ms/vscode-instructions-docs):
+- If `.github/copilot-instructions.md` exists, merge intelligently - preserve valuable content while updating outdated sections
+- Write concise, actionable instructions (~20-50 lines) using markdown structure
+- Include specific examples from the codebase when describing patterns
+- Avoid generic advice ("write tests", "handle errors") - focus on THIS project's specific approaches
+- Document only discoverable patterns, not aspirational practices
+- Reference key files/directories that exemplify important patterns
+
+Update `.github/copilot-instructions.md` for the user, then ask for feedback on any unclear or incomplete sections to iterate.

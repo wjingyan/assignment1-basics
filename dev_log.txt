@@ -1,0 +1,59 @@
+01/24
+- FAILED tests/test_train_bpe.py::test_train_bpe - AssertionError: assert [(b'i', b'n')] == [(b' ', b't')...', b'e'), ...]
+    - Observation
+        b' ', b't' count was wrong
+        corpus.en doesn't have <|endoftext|>
+    - Fix: byte_pair_freqs[byte_pair] += word_freqs[word] instead of byte_pair_freqs[byte_pair] += 1
+- <endoftext> is vocab 0
+- (b' ', b't'), (b' ', b't'), (b' ', b't') was count 3 times in merges
+    - Fix: added word back inside update word_freqs loop
+01/25
+- (b' ', b't') not merged succcessfully
+    - Fix: update word with new vocab logic
+- AssertionError: assert [(b' ', b't')...', b'e'), ...] == [(b' ', b't')...', b'e'), ...]
+ At index 13 diff: (b'o', b'r') != (b'i', b's')
+    - ' o' might not be merged correctly
+    - After merging 're', byte_pair_freqs[(b'o', b'r')] was not right, should -140
+1/26
+- Cont Why merging (r, e) decreases (o, r) by 96 instead of 140
+    - Diagnosis: some re are not merged correctly, o-re should be 140, not 96
+
+1/27
+- Ah it's entries like therefore, Therefore Wherefore 
+    - OMG!!! Finally found the issue! It's indeede caused by two re in the word  the|r|e|f|o|r|e ->  the|re|f|o|r|re
+- At index 151 diff: (b' you', b'r') != (b' ', b'1')
+    - What we know: line 152 of reference ' |1', my code must tried to merge ' you|r' @ token_id 408
+
+1/28
+- At index 151 diff: (b' you', b'r') != (b' ', b'1')
+    - Before merging 0|0, Count(' |1')=107 after, 98. So there're 7 ' |1' that was somehow messed up by merging 0|0
+
+1/30
+- Cont At index 151 diff: (b' you', b'r') != (b' ', b'1')
+    -  |1|0|0|0 ->  |1|00  |1|0|0|0|0 ->  |1|00
+    - Solution: increment i by another 1 when there's match
+
+1/31
+- IMPL multiprocess
+
+2/1
+- IMPL multiprocess
+    - Done but test broke FAILED tests/test_train_bpe.py::test_train_bpe_special_tokens - AssertionError: assert b'<|' not in b'<|'
+2/2
+- FAILED tests/test_train_bpe.py::test_train_bpe_special_tokens - AssertionError: assert b'<|' not in b'<|'
+    - Need to split input to chunks
+- RuntimeError: 
+        An attempt has been made to start a new process before the
+        current process has finished its bootstrapping phase.
+    - __name__ == '__main__':
+2/3
+- IMPL simple profile code
+- UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte
+- Need to download right TinyStory data and retrain TinyStories!
+2/4
+- TinyStories val took 71 sec
+- gunzip: error writing to output: No space left on device
+- owt val took 2 hours
+- owt train os error
+2/5
+- Mac kept restarting, freed up storage space. Asked Gemini about memory usage monitoring

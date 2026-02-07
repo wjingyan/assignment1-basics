@@ -1,0 +1,19 @@
+2.1
+(a) '\x00' null character
+(b) Same just escaped. repr(chr(0)) result is "'\\x00'"
+(c) It's skipped in string. Python it is treated as a valid, invisible character that does not truncate the text, allowing the rest of the string to print normally.
+
+2.2
+(a) Save space coz utf-8 char are most frequent
+(b) UTF-8 is variable length
+(c) b'\xff\xff'
+
+2.4
+train_bpe_tinystories
+(a)
+Total execution time: 630.48 seconds
+Peak memory usage: 109.06 MB
+Longest token is b' accomplishment'. Makes sense
+(b)
+Pre-tokenization took 184.20 seconds.
+Merging took 446.24 seconds.

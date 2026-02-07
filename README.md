@@ -47,4 +47,23 @@ gunzip owt_valid.txt.gz
 
 cd ..
 ```
+#### Updated command to download data
+```
+cd data
+rm -f TinyStoriesV2-GPT4-train.txt TinyStoriesV2-GPT4-valid.txt owt_train.txt.gz owt_valid.txt.gz
 
+# Re-download with the -L flag to follow redirects
+curl -L -O https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt
+curl -L -O https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
+
+curl -L -O https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_train.txt.gz
+gunzip owt_train.txt.gz
+curl -L -O https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_valid.txt.gz
+gunzip owt_valid.txt.gz
+
+cd ..
+```
+# Commands
+uv run pytest tests/test_train_bpe.py::test_train_bpe_speed
+uv run cs336_basics/tokenizer.py
+uv run cs336_basics/resource_monitor.py
