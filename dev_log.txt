@@ -57,3 +57,13 @@
 - owt train os error
 2/5
 - Mac kept restarting, freed up storage space. Asked Gemini about memory usage monitoring
+2/6
+- git add working code
+- refactor
+- Impl optimizing merging step
+- AssertionError: assert [(b' ', b't')...', b'a'), ...] == [(b' ', b't')...', b'e'), ...]
+2/7
+- Hand impl optimized indexed merging
+    - Seems like merging 'h', 'e' did not successfully deduct pair from ' t', 'h'
+2/10
+- 

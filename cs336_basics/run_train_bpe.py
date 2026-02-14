@@ -11,7 +11,7 @@ def main():
         "--dataset",
         type=str,
         required=True,
-        choices=["tinystories", "owt"],
+        choices=["tinystories", "owt", "test"],
         help="The dataset to use for training (tinystories or owt).",
     )
     parser.add_argument(
@@ -20,6 +20,12 @@ def main():
         required=True,
         choices=["train", "validation"],
         help="The dataset split to use (train or validation).",
+    )
+    parser.add_argument(
+        "--vocab-size",
+        type=int,
+        default=None,
+        help="Override the default vocab size (useful for quick profiling runs).",
     )
     args = parser.parse_args()
 
@@ -30,6 +36,13 @@ def main():
     elif args.dataset == "owt":
         vocab_size = 32000
         input_path = f"data/owt_{args.split}.txt"
+    elif args.dataset == "test":
+        vocab_size = 10000
+        input_path = f"tests/fixtures/corpus.en"
+    
+    # Override vocab_size if provided
+    if args.vocab_size is not None:
+        vocab_size = args.vocab_size
     
     special_tokens = ["<|endoftext|>"]
     output_dir = "tokenizer_output"

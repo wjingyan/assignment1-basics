@@ -18,6 +18,8 @@ You can now run any code in the repo using
 uv run <python_file_path>
 ```
 and the environment will be automatically solved and activated when necessary.
+uv pip install scalene
+
 
 ### Run unit tests
 
@@ -33,7 +35,7 @@ functions in [./tests/adapters.py](./tests/adapters.py).
 ### Download data
 Download the TinyStories data and a subsample of OpenWebText
 
-``` sh
+```sh
 mkdir -p data
 cd data
 
@@ -53,17 +55,33 @@ cd data
 rm -f TinyStoriesV2-GPT4-train.txt TinyStoriesV2-GPT4-valid.txt owt_train.txt.gz owt_valid.txt.gz
 
 # Re-download with the -L flag to follow redirects
+# Download TinyStories
 curl -L -O https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-train.txt
 curl -L -O https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStoriesV2-GPT4-valid.txt
 
+# Download and decompress OpenWebText sample
 curl -L -O https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_train.txt.gz
 gunzip owt_train.txt.gz
+gunzip -f owt_train.txt.gz
 curl -L -O https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_valid.txt.gz
 gunzip owt_valid.txt.gz
+gunzip -f owt_valid.txt.gz
 
 cd ..
 ```
 # Commands
+uv run pytest tests/test_train_bpe.py
 uv run pytest tests/test_train_bpe.py::test_train_bpe_speed
 uv run cs336_basics/tokenizer.py
 uv run cs336_basics/resource_monitor.py
+uv run cs336_basics/run_train_bpe.py --dataset tinystories --split train
+uv run cs336_basics/run_train_bpe.py --dataset owt --split train
+# Profile
+# Profile the script running on the TinyStories validation set
+uv run python -m cProfile -s cumulative cs336_basics/run_train_bpe.py --dataset tinystories --split validation
+# Profile the script using Scalene
+uv run python -m scalene run cs336_basics/run_train_bpe.py --dataset test --split train
+# Profile a specific test using Scalene
+uv run python -m scalene --pytest tests/test_train_bpe.py::test_train_bpe
+# View Scalene results in browser
+uv run scalene view

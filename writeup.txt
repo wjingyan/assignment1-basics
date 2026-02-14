@@ -14,6 +14,13 @@ train_bpe_tinystories
 Total execution time: 630.48 seconds
 Peak memory usage: 109.06 MB
 Longest token is b' accomplishment'. Makes sense
+---Indexed bp impl
+Total execution time: 337.36 seconds
+Peak memory usage: 104.03 MB
+Longest token is b' accomplishment'. Makes sense
 (b)
 Pre-tokenization took 184.20 seconds.
 Merging took 446.24 seconds.
+---Indexed bp impl
+Pre-tokenization took 150.08 seconds.
+Merging took 187.25 seconds.
