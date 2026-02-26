@@ -19,6 +19,8 @@ class Tokenizer:
         self.merges = merges
         self.special_tokens = special_tokens or []
         self.token2id = {token: token_id for token_id, token in vocab.items()}
+        # Pre-calculate merge ranks for the BPE algorithm
+        self.merge_ranks = {pair: i for i, pair in enumerate(merges)}
     
     @classmethod
     def from_files(
@@ -33,8 +35,9 @@ class Tokenizer:
             raw_merges = json.load(f)
 
         # Convert JSON strings back to internal types (int, bytes)
-        vocab = {int(k): v.encode('utf-8') for k, v in raw_vocab.items()}
-        merges = [(m[0].encode('utf-8'), m[1].encode('utf-8')) for m in raw_merges]
+        # Use 'latin-1' because that's how they were serialized in run_train_bpe.py
+        vocab = {int(k): v.encode('latin-1') for k, v in raw_vocab.items()}
+        merges = [(m[0].encode('latin-1'), m[1].encode('latin-1')) for m in raw_merges]
 
         return cls(vocab, merges, special_tokens)
 
@@ -43,10 +46,12 @@ class Tokenizer:
         if not self.special_tokens:
             chunks = [text]
         else:
-            pattern = "|".join(re.escape(token) for token in self.special_tokens)
+            # Sort special tokens by length descending to ensure longest match first
+            sorted_specials = sorted(self.special_tokens, key=len, reverse=True)
+            pattern = "|".join(re.escape(token) for token in sorted_specials)
             # Use capturing groups to keep special tokens in the result
-            chunks = re.split(f"({pattern})", text)
-            chunks = [c for c in chunks if c]
+            chunks = re.split(f"({pattern})", text) # Preserve special tokens, compared with pattern, text
+            chunks = [c for c in chunks if c] # re.split with capturing groups is that it often produces empty strings
 
         for chunk in chunks:
             if chunk in self.special_tokens:
@@ -58,15 +63,37 @@ class Tokenizer:
             for match in re.finditer(PAT, chunk):
                 # Convert the pre-token to bytes immediately to handle multi-byte chars correctly
                 word_bytes = match.group(0).encode('utf-8')
-                i = 0
-                while i < len(word_bytes):
-                    # Greedily match the longest possible byte sequence in our vocabulary
-                    for j in range(len(word_bytes), i, -1):
-                        token_bytes = word_bytes[i:j]
-                        if token_bytes in self.token2id:
-                            res.append(self.token2id[token_bytes])
-                            i = j
-                            break
+                # BPE algorithm: start with individual bytes
+                word_tokens = [word_bytes[i : i + 1] for i in range(len(word_bytes))]
+
+                while len(word_tokens) > 1:
+                    # Find the pair with the lowest rank (highest priority)
+                    best_pair = None
+                    min_rank = float("inf")
+                    for i in range(len(word_tokens) - 1):
+                        pair = (word_tokens[i], word_tokens[i + 1])
+                        rank = self.merge_ranks.get(pair, float("inf"))
+                        if rank < min_rank:
+                            min_rank = rank
+                            best_pair = pair
+
+                    if best_pair is None or min_rank == float("inf"):
+                        break
+
+                    # Merge all occurrences of the best pair
+                    new_word_tokens = []
+                    i = 0
+                    while i < len(word_tokens):
+                        if i < len(word_tokens) - 1 and (word_tokens[i], word_tokens[i + 1]) == best_pair:
+                            new_word_tokens.append(word_tokens[i] + word_tokens[i + 1])
+                            i += 2
+                        else:
+                            new_word_tokens.append(word_tokens[i])
+                            i += 1
+                    word_tokens = new_word_tokens
+
+                for token in word_tokens:
+                    res.append(self.token2id[token])
         return res
                 
     def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]:

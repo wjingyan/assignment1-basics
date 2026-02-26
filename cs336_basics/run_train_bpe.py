@@ -18,7 +18,7 @@ def main():
         "--split",
         type=str,
         required=True,
-        choices=["train", "validation"],
+        choices=["train", "valid"],
         help="The dataset split to use (train or validation).",
     )
     parser.add_argument(

@@ -24,3 +24,11 @@ Merging took 446.24 seconds.
 ---Indexed bp impl
 Pre-tokenization took 150.08 seconds.
 Merging took 187.25 seconds.
+
+2.7
+(a) TinyStories: 4.15 bytes/token
+owt: 4.51 bytes/token
+(b) 3.40 bytes/token. Compression ration dropped
+(c) Throughput: 811635.81 bytes/second.
+825*1024*1024*1024/811635.81/3600 = 303.17 hour = 12.6 days
+(d) uint16 has range of 0-65535, which works for vocab size 10000 or 32000

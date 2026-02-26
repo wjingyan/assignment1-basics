@@ -65,5 +65,11 @@
 2/7
 - Hand impl optimized indexed merging
     - Seems like merging 'h', 'e' did not successfully deduct pair from ' t', 'h'
-2/10
-- 
+2/15
+- 4 failed -> 3 failed
+2/16
+- Passed all UT
+2/18
+- owt encoding would take 4 hours...
+2/20
+- Part 2 finally completed...

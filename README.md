@@ -70,12 +70,13 @@ gunzip -f owt_valid.txt.gz
 cd ..
 ```
 # Commands
+# Part 2
 uv run pytest tests/test_train_bpe.py
 uv run pytest tests/test_train_bpe.py::test_train_bpe_speed
 uv run cs336_basics/tokenizer.py
 uv run cs336_basics/resource_monitor.py
 uv run cs336_basics/run_train_bpe.py --dataset tinystories --split train
-uv run cs336_basics/run_train_bpe.py --dataset owt --split train
+uv run cs336_basics/run_train_bpe.py --dataset owt --split valid
 # Profile
 # Profile the script running on the TinyStories validation set
 uv run python -m cProfile -s cumulative cs336_basics/run_train_bpe.py --dataset tinystories --split validation
@@ -85,3 +86,41 @@ uv run python -m scalene run cs336_basics/run_train_bpe.py --dataset test --spli
 uv run python -m scalene --pytest tests/test_train_bpe.py::test_train_bpe
 # View Scalene results in browser
 uv run scalene view
+# tokenizer_experiments (a)
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_tinystories_train.json \
+    --merges tokenizer_output/merges_tinystories_train.json \
+    --input data/tinystory-sample.txt \
+    --output output/encoding/encoded_tinystories.txt
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_owt_valid.json \
+    --merges tokenizer_output/merges_owt_valid.json \
+    --input data/owt-sample.txt \
+    --output output/encoding/encoded_owt.txt
+# tokenizer_experiments (b)
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_tinystories_train.json \
+    --merges tokenizer_output/merges_tinystories_train.json \
+    --input data/owt-sample.txt \
+    --output output/encoding/encoded_owt_w_ts_tokenizer.txt
+# tokenizer_experiments (d)
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_tinystories_train.json \
+    --merges tokenizer_output/merges_tinystories_train.json \
+    --input data/TinyStoriesV2-GPT4-train.txt \
+    --output output/encoding/encoded_tinystories_train.npy
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_tinystories_train.json \
+    --merges tokenizer_output/merges_tinystories_train.json \
+    --input data/TinyStoriesV2-GPT4-valid.txt \
+    --output output/encoding/encoded_tinystories_valid.npy
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_owt_valid.json \
+    --merges tokenizer_output/merges_owt_valid.json \
+    --input data/owt_train.txt \
+    --output output/encoding/encoded_owt_train.npy
+uv run cs336_basics/run_tokenizer.py \
+    --vocab tokenizer_output/vocab_owt_valid.json \
+    --merges tokenizer_output/merges_owt_valid.json \
+    --input data/owt_valid.txt \
+    --output output/encoding/encoded_owt_valid.npy
