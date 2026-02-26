@@ -124,3 +124,5 @@ uv run cs336_basics/run_tokenizer.py \
     --merges tokenizer_output/merges_owt_valid.json \
     --input data/owt_valid.txt \
     --output output/encoding/encoded_owt_valid.npy
+# Part 3
+uv run pytest -k test_linear

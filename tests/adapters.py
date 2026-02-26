@@ -29,7 +29,11 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
+    from cs336_basics.lm import Linear
+    layer = Linear(d_in, d_out, device=weights.device, dtype=weights.dtype)
+    # Test weights are (d_out, d_in), our column-based implementation expects (d_in, d_out)
+    layer.load_state_dict({"weight": weights.T})
+    return layer(in_features)
 
 
 def run_embedding(
@@ -590,7 +594,6 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    #raise NotImplementedError
     from cs336_basics.tokenizer import train_bpe
 
     vocab, merges = train_bpe(

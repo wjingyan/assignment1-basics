@@ -2,8 +2,9 @@ import torch
 import math
 from einops import einsum
 
-class Linear:
+class Linear(torch.nn.Module):
     def __init__(self, in_features, out_features, device=None, dtype=None):
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.device = device
