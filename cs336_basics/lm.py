@@ -22,7 +22,7 @@ class Linear(torch.nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Apply the linear transformation to the input."""
+        """(..., in_features) -> (..., out_features)"""
         return einsum(x, self.weight, "... d_in, d_in d_out -> ... d_out")
 
 class Embedding(torch.nn.Module):
@@ -45,6 +45,7 @@ class Embedding(torch.nn.Module):
         )
 
     def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
+        """(batch_size, seq_len) -> (batch_size, seq_len, embedding_dim)"""
         return self.embedding[token_ids]
 
 class RMSNorm(torch.nn.Module):
@@ -58,8 +59,7 @@ class RMSNorm(torch.nn.Module):
         self.weights = torch.nn.Parameter(torch.ones(d_model, device=device, dtype=dtype))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """ Input shape (batch_size, sequence_length, d_model)
-        """
+        """(batch_size, seq_len, d_model) -> (batch_size, seq_len, d_model)"""
         in_dtype = x.dtype
         x = x.to(torch.float32)
         # Your code here performing RMSNorm
@@ -67,3 +67,42 @@ class RMSNorm(torch.nn.Module):
         result = x * self.weights / rms
         # Return the result in the original dtype
         return result.to(in_dtype)
+
+class FeedForwardNetwork(torch.nn.Module):
+    def __init__(self, d_model: int, d_ff: int,device=None, dtype=None):
+        super().__init__()
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.device = device
+        self.dtype = dtype
+
+        # Initialize weight tensor
+        self.w1 = torch.nn.Parameter(
+            torch.empty((d_model, d_ff), device=device, dtype=dtype)
+        )
+        self.w2 = torch.nn.Parameter(
+            torch.empty((d_ff, d_model), device=device, dtype=dtype)
+        )
+        self.w3 = torch.nn.Parameter(
+            torch.empty((d_model, d_ff), device=device, dtype=dtype)
+        )
+
+        # Apply Xavier Truncated Normal initialization
+        sigma = math.sqrt(2.0 / (d_model + d_ff))
+        torch.nn.init.trunc_normal_(
+            self.w1, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.w2, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.w2, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """(batch_size, seq_len, d_model) -> (batch_size, seq_len, d_model)"""
+        w1_x = einsum(x, self.w1, "... d_model, d_model d_ff -> ... d_ff")
+        w3_x = einsum(x, self.w3, "... d_model, d_model d_ff -> ... d_ff")
+        silu = w1_x * torch.sigmoid(w1_x)
+        elementwise_mul = silu * w3_x
+        return einsum(elementwise_mul, self.w2, "... d_ff, d_ff d_model -> ... d_model")
