@@ -106,3 +106,48 @@ class FeedForwardNetwork(torch.nn.Module):
         silu = w1_x * torch.sigmoid(w1_x)
         elementwise_mul = silu * w3_x
         return einsum(elementwise_mul, self.w2, "... d_ff, d_ff d_model -> ... d_model")
+
+class RoPE(torch.nn.Module):
+    def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None):
+        super().__init__()
+        theta = theta
+        self.d_k = d_k
+        self.max_seq_len = max_seq_len
+        self.device = device
+
+        # Create theta_i
+        dims = torch.arange(0, d_k, 2).float().to(device)
+        freqs = 1 / (theta ** (dims / d_k))
+
+        # Precompute angle
+        t = torch.arange(max_seq_len, device=device).float()
+        # Q can be replaced with einsum?
+        angles = torch.outer(t, freqs)
+
+        self.register_buffer("cos", torch.cos(angles))
+        self.register_buffer("sin", torch.sin(angles))
+
+    def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor:
+        """(..., seq_len, d_k) -> (..., seq_len, d_k)"""
+        cos = self.cos[token_positions]
+        sin = self.sin[token_positions]
+
+        # 2. Repeat cos and sin so they match the d_k dimension
+        # (..., d_k // 2) -> (..., d_k) by repeating each value twice
+        # This makes cos look like [c0, c0, c1, c1, ...]
+        cos = torch.repeat_interleave(cos, 2, dim=-1)
+        sin = torch.repeat_interleave(sin, 2, dim=-1)
+
+        # 3. Create the "Interleaved" negative counterpart
+        # We want x_interleaved = [-x1, x0, -x3, x2, ...]
+        x_neg = torch.empty_like(x)
+        x_neg[..., 0::2] = -x[..., 1::2]
+        x_neg[..., 1::2] = x[..., 0::2]
+
+        # 4. Apply the rotation: x * cos + x_neg * sin
+        # This perfectly implements:
+        # out_even = x_even * cos - x_odd * sin
+        # out_odd  = x_even * sin + x_odd * cos
+        return x * cos + x_neg * sin
+
+        
