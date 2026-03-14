@@ -166,4 +166,60 @@ def scaled_dot_product_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tens
     attn = softmax(scores, dim=-1)
     return einsum(attn, V, "... seq_len_q seq_len_k, ... seq_len_k d_v -> ... seq_len_q d_v")
 
+class MultiHeadAttention(torch.nn.Module):
+    def __init__(self, d_model: int, num_heads: int, device=None, dtype=None):
+        super().__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads
+        self.device = device
+        self.dtype = dtype
+
+        # Combined projections for all heads: (d_model, d_model)
+        self.q_proj = torch.nn.Parameter(
+            torch.empty((d_model, d_model), device=device, dtype=dtype)
+        )
+        self.k_proj = torch.nn.Parameter(
+            torch.empty((d_model, d_model), device=device, dtype=dtype)
+        )
+        self.v_proj = torch.nn.Parameter(
+            torch.empty((d_model, d_model), device=device, dtype=dtype)
+        )
+        self.o_proj = torch.nn.Parameter(
+            torch.empty((d_model, d_model), device=device, dtype=dtype)
+        )
+
+    def forward(self, x: torch.Tensor, rope: RoPE | None = None, token_positions: torch.Tensor | None = None) -> torch.Tensor:
+        """(batch, seq_len, d_model) -> (batch, seq_len, d_model)"""
+        batch, seq_len, _ = x.shape
+        d_k = self.d_k
+
+        # Project to queries, keys, values
+        q = einsum(x, self.q_proj, "... d_model, d_model d_out -> ... d_out")
+        k = einsum(x, self.k_proj, "... d_model, d_model d_out -> ... d_out")
+        v = einsum(x, self.v_proj, "... d_model, d_model d_out -> ... d_out")
+
+        # Reshape to (batch, num_heads, seq_len, d_k)
+        q = q.view(batch, seq_len, self.num_heads, d_k).transpose(1, 2)
+        k = k.view(batch, seq_len, self.num_heads, d_k).transpose(1, 2)
+        v = v.view(batch, seq_len, self.num_heads, d_k).transpose(1, 2)
+
+        # Apply RoPE after splitting heads
+        if rope is not None:
+            if token_positions is None:
+                token_positions = torch.arange(seq_len, device=x.device)
+            q = rope(q, token_positions)
+            k = rope(k, token_positions)
+
+        # Causal mask
+        mask = ~torch.triu(torch.ones(seq_len, seq_len, dtype=torch.bool, device=x.device), diagonal=1)
+
+        # Attention: (batch, num_heads, seq_len, d_k)
+        attn = scaled_dot_product_attention(q, k, v, mask)
+
+        # Reshape back to (batch, seq_len, d_model)
+        attn = attn.transpose(1, 2).contiguous().view(batch, seq_len, self.d_model)
+
+        return einsum(attn, self.o_proj, "... d_model, d_model d_out -> ... d_out")
+
 
