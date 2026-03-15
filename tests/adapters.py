@@ -292,9 +292,20 @@ def run_transformer_block(
     """
     from cs336_basics.lm import TransformerBlock, RoPE
     d_k = d_model // num_heads
+    remapped = {
+    "attn.q_proj": weights["attn.q_proj.weight"].T,
+    "attn.k_proj": weights["attn.k_proj.weight"].T,
+    "attn.v_proj": weights["attn.v_proj.weight"].T,
+    "attn.o_proj": weights["attn.output_proj.weight"].T,
+    "ln1.weights": weights["ln1.weight"],
+    "ln2.weights": weights["ln2.weight"],
+    "ffn.w1": weights["ffn.w1.weight"].T,
+    "ffn.w2": weights["ffn.w2.weight"].T,
+    "ffn.w3": weights["ffn.w3.weight"].T,
+    }
     rope = RoPE(theta, d_k, max_seq_len, device=in_features.device)
     block = TransformerBlock(d_model, num_heads, d_ff, device=in_features.device, dtype=in_features.dtype)
-    block.load_state_dict(weights)
+    block.load_state_dict(remapped)
     return block(in_features, rope)
 
 
