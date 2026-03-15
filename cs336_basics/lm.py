@@ -222,4 +222,22 @@ class MultiHeadAttention(torch.nn.Module):
 
         return einsum(attn, self.o_proj, "... d_model, d_model d_out -> ... d_out")
 
+class TransformerBlock(torch.nn.Module):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, device=None, dtype=None):
+        super.__init__()
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_ff = d_ff
+        self.device = device
+        self.dtype = dtype
+        self.attn = MultiHeadAttention(d_model, num_heads, device=device, dtype=dtype)
+        self.ffn = FeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
+        self.prenorm = RMSNorm(d_model, device=device, dtype=dtype)
 
+    def forward(self, x: torch.Tensor, rope: RoPE | None = None, token_positions: torch.Tensor | None = None) -> torch.Tensor:
+        """(batch, seq_len, d_model) -> (batch, seq_len, d_model)"""
+        x = self.prenorm(x)
+        x = x + self.attn(x, rope)
+        x = self.prenorm(x)
+        x = x + self.ffn(x)
+        return x
