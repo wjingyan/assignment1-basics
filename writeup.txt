@@ -32,3 +32,36 @@ owt: 4.51 bytes/token
 (c) Throughput: 811635.81 bytes/second.
 825*1024*1024*1024/811635.81/3600 = 303.17 hour = 12.6 days
 (d) uint16 has range of 0-65535, which works for vocab size 10000 or 32000
+
+3.6 transformer_accounting
+(a)
+Trainable params
+(2*d_m + 4*d_m^2 + 3*d_m*d_ff) * num_layers + 2 * d_m * voc + d_m
+= 2,127,057,600
+Memory needed to load the model
+2,127,057,600 * 4 / 1024/1024/1024 = 7.92 GB
+(b)
+QKVO projection: 4 * 2 * l * d^2
+Attn: 2 * 2 * l^2 * d
+FFN: 3 * 2 * l * d * d_ff
+Each Transformer block: 8 * l * d^2 + 4 * l^2 * d + 6 * l * d * d_ff
+num_layers transfomer blocks: num_layers * (8*l*d^2 + 4*l^2*d +6*l*d*d_ff)
+output_emb: 2 * l * d * voc
+Total: num_layers * (8*l*d^2 + 4*l^2*d +6*l*d*d_ff) + 2*l*d*voc
+48 * (8*1024*1600*1600 + 4*1024*1024*1600 + 6*1024*1600*6400) + 2*1024*1600*50257
+=4,513,336,524,800 ~ 4.51 TFlops
+(c)
+Inside transformer block, FFN
+(d)
+Parameters	GPT-2 small	GPT-2 small %	GPT-2 medium	GPT-2 medium %	GPT-2 large	GPT-2 large %
+FLOP of each parts						
+QKVO projection	4,831,838,208	1.38%	8,589,934,592	0.83%	13,421,772,800	0.59%
+MHA	3,221,225,472	0.92%	4,294,967,296	0.42%	5,368,709,120	0.24%
+FFN	14,495,514,624	4.15%	25,769,803,776	2.49%	40,265,318,400	1.78%
+Total Transformer Block	270,582,939,648	77.39%	927,712,935,936	89.80%	2,126,008,811,520	94.16%
+Output Emb	79,047,426,048	22.61%	105,396,568,064	10.20%	131,745,710,080	5.84%
+Total LM	349,630,365,696		1,033,109,504,000		2,257,754,521,600
+Observation: QKVO, FFN increase as model increase, MHA and output emb decreased
+(e)
+FLOP of 1 forward pass x 33
+Now MHA accounts for most of the FLOP, where as other components dropped
