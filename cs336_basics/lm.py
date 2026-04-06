@@ -267,3 +267,13 @@ class TransformerLM(torch.nn.Module):
             emb = getattr(self, f"transformer_block_{i}")(emb, rope)
         normed_x = self.ln_final(emb)
         return self.lm_head(normed_x)
+
+def cross_entropy(logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    """(..., vocab_size), (...) -> scalar"""
+    logits_max = logits.max(dim=-1, keepdim=True).values          # (..., 1) keepdim=True preserved the dim as size 1
+    log_sum_exp = (logits - logits_max).exp().sum(dim=-1).log()   # (...)
+    log_sum_exp = log_sum_exp + logits_max.squeeze(-1)            # add max back
+
+    correct_logits = logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)  # (...)
+
+    return (log_sum_exp - correct_logits).mean()
