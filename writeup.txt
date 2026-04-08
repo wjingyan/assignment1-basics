@@ -65,3 +65,11 @@ Observation: QKVO, FFN increase as model increase, MHA and output emb decreased
 (e)
 FLOP of 1 forward pass x 33
 Now MHA accounts for most of the FLOP, where as other components dropped
+4.2
+Experiments Observations:
+lr=1: loss gradually decreased, from 27 to 23
+lr=1e1: loss more quickly decreased from 29 to 4
+lr=1e2: loss drastically decreased from 31 to e-23
+lr=1e3: loss diverged
+Answer:
+Lower learning rates (lr=1) caused slow, steady loss decay, while moderate rates (lr=1e1, 1e2) decayed faster — with lr=1e2 reaching near zero within 10 steps. lr=1e3 caused the loss to diverge, increasing rather than decreasing.
