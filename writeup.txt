@@ -73,3 +73,23 @@ lr=1e2: loss drastically decreased from 31 to e-23
 lr=1e3: loss diverged
 Answer:
 Lower learning rates (lr=1) caused slow, steady loss decay, while moderate rates (lr=1e1, 1e2) decayed faster — with lr=1e2 reaching near zero within 10 steps. lr=1e3 caused the loss to diverge, increasing rather than decreasing.
+4.3
+(a)
+B=batch_size, L=context_length, d=d_model, V=vocab_size, n=num_layers, H=num_heads
+P = n(16d² + 2d) + d + 2Vd ≈ 16nd² + 2Vd
+Gradients = P
+optimizer = 2P (AdamW)
+Activations = n(16BLd + 2BHL^2) + BLd (final RMS) + BLV (logits)
+Total = 16nd^2 + 2nd + d + 2Vd + n(16BLd + 2BHL^2) + BLd + BLV
+(b) 14.26 B + 31.7
+max_b = 3
+(c) 13P = 208nd^2 + 26nd + 13d + 26Vd
+Each step of AdamW takes m 3 / v 4 / update parameter 6 steps each. Totalling 13P flops
+(d) 
+
+From 3.6, each forward step is 4.51*1024 = 4618 TFLOPs. Backward 9.02*1024=9237 TFLOPs
+B=1024 n=48, d=1600, V=50257
+Optimizer flops are 
+13*(48*(16*1600*1600+2*1600) +1600+2*1600*50257) = 27,651,748,800 ~ 0.28 TFLOPs
+Total FLOPS per step = 13855 TFLOPs
+400000*13855/19.5/0.5/24/3600/365=18 years

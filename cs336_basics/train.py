@@ -2,6 +2,7 @@ from collections.abc import Callable, Iterable
 from typing import Optional
 import torch
 import math
+from math import cos, pi
 class SGD(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3):
         if lr < 0:
@@ -62,6 +63,26 @@ def simple_training_loop():
         print(loss.cpu().item())
         loss.backward() # Run backward pass, which computes gradients.
         opt.step() # Run optimizer step.
+
+def learning_rate_schedule(t, lr_max, lr_min, t_w, t_c):
+    """
+    Given the parameters of a cosine learning rate decay schedule (with linear
+    warmup) and an iteration number, return the learning rate at the given
+    iteration under the specified schedule.
+
+    Args:
+        t (int): Iteration number to get learning rate for.
+        lr_max (float): Maximum learning rate.
+        lr_min (float): Minimum learning rate.
+        t_w: warm up until t_w
+        t_c: cosine annealing until t_c
+    """
+    if t < t_w:
+        return t/t_w * lr_max
+    elif t <= t_c:
+        return lr_min + 0.5 * (1 + cos((t-t_w)*pi/(t_c-t_w)))*(lr_max-lr_min)
+    else: # t > t_c
+        return lr_min
 
 if __name__ == "__main__":
     simple_training_loop()
