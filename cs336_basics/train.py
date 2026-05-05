@@ -3,6 +3,8 @@ from typing import Optional
 import torch
 import math
 from math import cos, pi
+import os, typing
+
 class SGD(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3):
         if lr < 0:

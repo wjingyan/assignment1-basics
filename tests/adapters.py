@@ -604,7 +604,7 @@ def run_load_checkpoint(
         int: the previously-serialized number of iterations.
     """
     from cs336_basics.train import load_checkpoint
-    load_checkpoint(model, optimizer, iteration, out)
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
