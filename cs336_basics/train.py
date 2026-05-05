@@ -93,5 +93,30 @@ def gradient_clipping(params: Iterable[torch.nn.Parameter], max_l2_norm: float):
             if not p.grad is None:
                 p.grad.data.mul_(max_l2_norm/(total_norm + eps))
 
+def load_data(x, batch_size, context_length, device):
+    """
+    Sample random batches from a token dataset.
+
+    Each sample is a contiguous slice of context_length tokens. The target is
+    the same slice shifted right by 1 (next-token prediction). Start positions
+    are sampled uniformly so that x[i : i+context_length+1] never goes out of bounds.
+
+    Args:
+        x (np.array): 1D integer array of token IDs.
+        batch_size (int): Number of sequences to sample.
+        context_length (int): Length of each sampled sequence.
+        device (str): PyTorch device string, e.g. 'cpu' or 'cuda:0'.
+
+    Returns:
+        Tuple of LongTensors (inputs, targets), each shape (batch_size, context_length).
+    """
+    # start_indices: batch_size random positions in [0, len(x)-context_length)
+    # upper bound ensures x[i+context_length] exists for the target's last token
+    start_indices = torch.randint(0, len(x) - context_length, (batch_size,))
+    inputs = torch.stack([torch.tensor(x[i:i+context_length], dtype=torch.long) for i in start_indices])
+    targets = torch.stack([torch.tensor(x[i+1:i+context_length+1], dtype=torch.long) for i in start_indices])
+    return inputs.to(device), targets.to(device)
+
+
 if __name__ == "__main__":
     simple_training_loop()
