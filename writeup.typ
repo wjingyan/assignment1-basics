@@ -1,4 +1,22 @@
-2.1
+#import "@preview/ilm:1.4.1": *
+
+#set text(lang: "en")
+
+#show: ilm.with(
+  title: [CS 336: Assignment 1],
+  date: datetime(year: 2025, month: 04, day: 15),
+  figure-index: (enabled: true),
+  table-index: (enabled: true),
+  listing-index: (enabled: true),
+)
+
+#set enum(numbering: "a)")
+#set heading(numbering: none)
+#show link: underline
+
+= 2. BPE Tokenizer
+== 2.1 
+=== Problem (`unicode1`): Understanding Unicode (1 point)
 (a) '\x00' null character
 (b) Same just escaped. repr(chr(0)) result is "'\\x00'"
 (c) It's skipped in string. Python it is treated as a valid, invisible character that does not truncate the text, allowing the rest of the string to print normally.
@@ -30,27 +48,47 @@ Merging took 187.25 seconds.
 owt: 4.51 bytes/token
 (b) 3.40 bytes/token. Compression ration dropped
 (c) Throughput: 811635.81 bytes/second.
-825*1024*1024*1024/811635.81/3600 = 303.17 hour = 12.6 days
+`825*1024*1024*1024/811635.81/3600 = 303.17 hour = 12.6 days`
 (d) uint16 has range of 0-65535, which works for vocab size 10000 or 32000
 
-3.6 transformer_accounting
-(a)
-Trainable params
-(2*d_m + 4*d_m^2 + 3*d_m*d_ff) * num_layers + 2 * d_m * voc + d_m
-= 2,127,057,600
-Memory needed to load the model
-2,127,057,600 * 4 / 1024/1024/1024 = 7.92 GB
-(b)
-QKVO projection: 4 * 2 * l * d^2
-Attn: 2 * 2 * l^2 * d
-FFN: 3 * 2 * l * d * d_ff
-Each Transformer block: 8 * l * d^2 + 4 * l^2 * d + 6 * l * d * d_ff
-num_layers transfomer blocks: num_layers * (8*l*d^2 + 4*l^2*d +6*l*d*d_ff)
-output_emb: 2 * l * d * voc
-Total: num_layers * (8*l*d^2 + 4*l^2*d +6*l*d*d_ff) + 2*l*d*voc
-48 * (8*1024*1600*1600 + 4*1024*1024*1600 + 6*1024*1600*6400) + 2*1024*1600*50257
-=4,513,336,524,800 ~ 4.51 TFlops
-(c)
+= 3
+== 3.6 The Full Transformer LM
+=== Problem (transformer_accounting): Transformer LM resource accounting (5 points)
+
++ Expression for total trainable parameters
+    Trainable parameters per transformer block:
+    $ P_"transformer_block" 
+        &= 2 "RMSNorm" + "QKVO proj" + "FFN" \
+        &= 2 d_m + 4 d_m^2 + 3 d_m d_"ff" $
+    Total trainable parameters:
+    $ P_"total" &= P_"transformer_block" times "num_layers" + "down/up proj (aka token/output emb)" \ 
+        &+ "Final RMSNorm" \
+        &= (2 d_m + 4 d_m^2 + 3 d_m d_"ff") times "num_layers" + 2 d_m "vocab_size" + d_m \
+        &= 2,127,057,600 $
+    Memory needed to load the model
+    `2,127,057,600 * 4 / 1024/1024/1024 = 7.92 GB`
+
++ MatMuls: QKVO, Attention, FFN. token/output embedding are not real MatMul because it's one-hot
+    
+    QKVO projection FLOPs:
+    $ "FLOP"_"qkvo" =  4 times 2 l d^2 = 8 l d^2 $ 
+    Attention FLOPs:
+    $ "FLOP"_"attn" =  2 times 2 l^2 d = 4 l^2 d $
+    FFN FLOPs:
+    $ "FLOP"_"ffn" =  3 times 2  l d d_"ff" = 6 l d d_"ff" $
+    Each transformer block FLOPs:
+    $ "FLOP"_"transformer_block" &= "FLOP"_"qkvo" + "FLOP"_"attn" + "FLOP"_"ffn" \
+        &= 8 l d^2 + 4 l^2 d + 6 l d d_"ff" $
+    Total FLOPS from MatMuls
+    $ "FLOP"_"total" &= "FLOP"_"transformer_block" times "num_layers" \
+        &= (8 l d^2 + 4 l^2 d + 6 l d d_"ff") times "num_layers" $
+    Plug in l=1024 d=1600 d_ff=6400 num_layers=48
+    $ "FLOP"_"total" \
+        &= 48 times (8 times 1024 times 1600 times 1600 + 4 times 1024 times 1024 times 1600 + 6 times 1024 times 1600 times 6400) \
+        &= 4,348,654,387,200 approx 4.38 "TFlops" $
+    `48 * (8*1024*1600*1600 + 4*1024*1024*1600 + 6*1024*1600*6400) to avoid retyping`
+
++
 Inside transformer block, FFN
 (d)
 Parameters	GPT-2 small	GPT-2 small %	GPT-2 medium	GPT-2 medium %	GPT-2 large	GPT-2 large %
@@ -75,7 +113,7 @@ Answer:
 Lower learning rates (lr=1) caused slow, steady loss decay, while moderate rates (lr=1e1, 1e2) decayed faster — with lr=1e2 reaching near zero within 10 steps. lr=1e3 caused the loss to diverge, increasing rather than decreasing.
 4.3
 (a)
-B=batch_size, L=context_length, d=d_model, V=vocab_size, n=num_layers, H=num_heads
+B=batch_size, L=context_length, d=d_model, V=vocab_size, n=num_layers, H=num_heads d_ff = 8/3 d_model
 P = n(16d² + 2d) + d + 2Vd ≈ 16nd² + 2Vd
 Gradients = P
 optimizer = 2P (AdamW)
@@ -86,10 +124,9 @@ max_b = 3
 (c) 13P = 208nd^2 + 26nd + 13d + 26Vd
 Each step of AdamW takes m 3 / v 4 / update parameter 6 steps each. Totalling 13P flops
 (d) 
-
-From 3.6, each forward step is 4.51*1024 = 4618 TFLOPs. Backward 9.02*1024=9237 TFLOPs
+`From 3.6, each forward step is 4.51*1024 = 4618 TFLOPs. Backward 9.02*1024=9237 TFLOPs`
 B=1024 n=48, d=1600, V=50257
 Optimizer flops are 
-13*(48*(16*1600*1600+2*1600) +1600+2*1600*50257) = 27,651,748,800 ~ 0.28 TFLOPs
+`13*(48*(16*1600*1600+2*1600) +1600+2*1600*50257) = 27,651,748,800 ~ 0.28 TFLOPs`
 Total FLOPS per step = 13855 TFLOPs
-400000*13855/19.5/0.5/24/3600/365=18 years
+`400000*13855/19.5/0.5/24/3600/365=18 years`

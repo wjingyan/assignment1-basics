@@ -20,6 +20,18 @@ uv run <python_file_path>
 and the environment will be automatically solved and activated when necessary.
 uv pip install scalene
 
+### Git shortcuts
+
+`git acp` is a global git alias (defined in `~/.gitconfig`) for add + commit + push in one step:
+
+```sh
+git acp "your commit message"
+```
+
+Equivalent to:
+```sh
+git add -A && git commit -m "your commit message" && git push origin main
+```
 
 ### Run unit tests
 
@@ -126,3 +138,18 @@ uv run cs336_basics/run_tokenizer.py \
     --output output/encoding/encoded_owt_valid.npy
 # Part 3
 uv run pytest -k test_linear
+
+# Train a Transformer LM on the tokenized TinyStories data
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --checkpoint-dir checkpoints/tinystories \
+    --wandb-project cs336-basics
