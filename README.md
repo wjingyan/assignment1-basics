@@ -153,3 +153,37 @@ uv run cs336_basics/train.py \
     --max-iters 5000 \
     --checkpoint-dir checkpoints/tinystories \
     --wandb-project cs336-basics
+# smoke test
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 1 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 1 \
+    --eval-iters 1 \
+    --device mps \
+    --checkpoint-dir checkpoints/tinystories_smoketest \
+    --wandb-project cs336-basics \
+    --wandb-run-name smoketest
+# mps run
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --eval-iters 50 \
+    --device mps \
+    --checkpoint-dir checkpoints/tinystories_smoketest \
+    --wandb-project cs336-basics \
+    --wandb-run-name smoketest
