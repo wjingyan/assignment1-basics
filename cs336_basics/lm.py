@@ -188,7 +188,7 @@ class MultiHeadAttention(torch.nn.Module):
         self.o_proj = torch.nn.Parameter(
             torch.empty((d_model, d_model), device=device, dtype=dtype)
         )
-
+        sigma = math.sqrt(1.0 / d_model)
         torch.nn.init.trunc_normal_(
             self.q_proj, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
         )
