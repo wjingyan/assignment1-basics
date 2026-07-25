@@ -96,7 +96,7 @@ class FeedForwardNetwork(torch.nn.Module):
             self.w2, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
         )
         torch.nn.init.trunc_normal_(
-            self.w2, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+            self.w3, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -187,6 +187,19 @@ class MultiHeadAttention(torch.nn.Module):
         )
         self.o_proj = torch.nn.Parameter(
             torch.empty((d_model, d_model), device=device, dtype=dtype)
+        )
+
+        torch.nn.init.trunc_normal_(
+            self.q_proj, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.k_proj, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.v_proj, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.o_proj, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
         )
 
     def forward(self, x: torch.Tensor, rope: RoPE | None = None, token_positions: torch.Tensor | None = None) -> torch.Tensor:

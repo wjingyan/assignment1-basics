@@ -220,11 +220,11 @@ uv run cs336_basics/train.py \
     --num-heads 16 \
     --d-ff 1344 \
     --batch-size 32 \
-    --max-iters 5000 \
+    --max-iters 1000 \
     --device cuda \
     --checkpoint-dir checkpoints/tinystories_cloud \
     --wandb-project cs336-basics \
-    --wandb-run-name train0
+    --wandb-run-name fixed-train-1000s
 ```
 
 ## On cloud device
