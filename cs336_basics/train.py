@@ -170,12 +170,12 @@ def init_rope_from_args(args, device):
     )
 
 @torch.no_grad()
-def estimate_val_loss(model, val_data, batch_size, context_length, device, eval_iters):
+def estimate_val_loss(model, rope, val_data, batch_size, context_length, device, eval_iters):
     model.eval()
     losses = torch.zeros(eval_iters)
     for i in range(eval_iters):
         inputs, targets = load_data(val_data, batch_size, context_length, device)
-        logits = model(inputs)
+        logits = model(inputs, rope)
         losses[i] = cross_entropy(logits, targets).item()
     model.train()
     return losses.mean().item()
@@ -230,7 +230,7 @@ def do_train(args):
                 wandb.log({"train/loss": loss.item(), "train/lr": lr, "iter": i}, step=i)
 
         if i % args.eval_interval == 0 or i == args.max_iters - 1:
-            val_loss = estimate_val_loss(model, val_data, args.batch_size, args.context_length, device, args.eval_iters)
+            val_loss = estimate_val_loss(model, rope, val_data, args.batch_size, args.context_length, device, args.eval_iters)
             print(f"iter {i}: val_loss={val_loss:.4f}")
             if use_wandb:
                 wandb.log({"val/loss": val_loss, "iter": i}, step=i)
