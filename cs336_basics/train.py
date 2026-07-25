@@ -8,7 +8,7 @@ from math import cos, pi
 import os, typing
 import numpy as np
 
-from cs336_basics.lm import TransformerLM, cross_entropy
+from cs336_basics.lm import TransformerLM, cross_entropy, RoPE
 
 class SGD(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3):
@@ -161,6 +161,14 @@ def init_optimizer_from_args(args, params):
         eps=args.eps,
     )
 
+def init_rope_from_args(args, device):
+    return RoPE(
+        theta = args.theta,
+        d_k = args.d_model // args.num_heads,
+        max_seq_len = args.context_length,
+        device = device
+    )
+
 @torch.no_grad()
 def estimate_val_loss(model, val_data, batch_size, context_length, device, eval_iters):
     model.eval()
@@ -182,11 +190,14 @@ def do_train(args):
 
     # Memory-efficient loading: the underlying token arrays are memory-mapped
     # from disk, so only the sampled batches are ever materialized in RAM.
-    train_data = np.memmap(args.train_data, dtype=np.uint16, mode="r")
-    val_data = np.memmap(args.val_data, dtype=np.uint16, mode="r")
+    # train_data = np.memmap(args.train_data, dtype=np.uint16, mode="r")
+    # val_data = np.memmap(args.val_data, dtype=np.uint16, mode="r")
+    train_data = np.load(args.train_data, mmap_mode='r')
+    val_data = np.load(args.val_data, mmap_mode='r')
 
     model = init_model_from_args(args, device, dtype)
     optimizer = init_optimizer_from_args(args, model.parameters())
+    rope = init_rope_from_args(args, device)
 
     iteration = 0
     if args.resume_from:
@@ -204,7 +215,7 @@ def do_train(args):
             group["lr"] = lr
 
         inputs, targets = load_data(train_data, args.batch_size, args.context_length, device)
-        logits = model(inputs)
+        logits = model(inputs, rope)
         loss = cross_entropy(logits, targets)
 
         optimizer.zero_grad()
@@ -245,6 +256,7 @@ def parse_args():
     model_args.add_argument("--num-layers", type=int, default=4)
     model_args.add_argument("--num-heads", type=int, default=16)
     model_args.add_argument("--d-ff", type=int, default=1344)
+    model_args.add_argument("--theta", type=int, default=10000)
 
     opt = parser.add_argument_group("optimizer")
     opt.add_argument("--lr-max", type=float, default=3e-4)

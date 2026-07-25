@@ -187,3 +187,65 @@ uv run cs336_basics/train.py \
     --checkpoint-dir checkpoints/tinystories_smoketest \
     --wandb-project cs336-basics \
     --wandb-run-name smoketest
+# Cloud run
+## smoke test
+```
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 1 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 1 \
+    --eval-iters 1 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_cloud_smoketest \
+    --wandb-project cs336-basics \
+    --wandb-run-name cloud_smoketest
+```
+
+## 5000 steps train
+```
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_cloud \
+    --wandb-project cs336-basics \
+    --wandb-run-name train0
+```
+
+## On cloud device
+```
+pip install uv
+cd workspace
+git clone https://github.com/wjingyan/assignment1-basics.git
+cd assignment1-basics
+mkdir -p output/encoding
+wandb login <your_api_key>
+uv sync
+```
+## SCP .npy
+```
+scp -P <pod-port> -i <identity_file> \
+    output/encoding/encoded_tinystories_train.npy \
+    output/encoding/encoded_tinystories_valid.npy \
+    <pod-user>@<pod-host>:/workspace/assignment1-basics/output/encoding/
+
+scp -P 14125 -i ~/.ssh/id_ed25519 \
+    output/encoding/encoded_tinystories_train.npy \
+    output/encoding/encoded_tinystories_valid.npy \
+    root@38.128.232.177:/workspace/assignment1-basics/output/encoding/
+```

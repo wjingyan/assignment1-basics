@@ -177,8 +177,8 @@ cs336_spring2025_assignment1_basics.pdf
 scalene*
 tokenizer_output/*
 
-cs336_spring2025_assignment1_basics.pdf
 output/*
 env_wandb
 checkpoints/*
 wandb/*
+cs336_basics/sweep.sh
