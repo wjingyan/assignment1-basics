@@ -153,7 +153,7 @@ uv run cs336_basics/train.py \
     --max-iters 5000 \
     --checkpoint-dir checkpoints/tinystories \
     --wandb-project cs336-basics
-## Local mps run
+## Local cpu run
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_tinystories_train.npy \
     --val-data output/encoding/encoded_tinystories_valid.npy \
@@ -166,8 +166,7 @@ uv run cs336_basics/train.py \
     --batch-size 32 \
     --max-iters 1 \
     --eval-iters 50 \
-    --device mps \
-    --checkpoint-dir checkpoints/tinystories_smoketest
+    --checkpoint-dir checkpoints/tinystories_test
 # Cloud run
 ## smoke test
 ```

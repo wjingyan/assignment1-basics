@@ -199,6 +199,8 @@ def do_train(args):
     optimizer = init_optimizer_from_args(args, model.parameters())
     rope = init_rope_from_args(args, device)
 
+    model = torch.compile(model)
+
     iteration = 0
     if args.resume_from:
         iteration = load_checkpoint(args.resume_from, model, optimizer)
