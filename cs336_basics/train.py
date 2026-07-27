@@ -199,7 +199,11 @@ def do_train(args):
     optimizer = init_optimizer_from_args(args, model.parameters())
     rope = init_rope_from_args(args, device)
 
+    # acceleration
     model = torch.compile(model)
+    if device.startswith('cuda'):
+        torch.set_float32_matmul_precision('high')
+        print(f"torch.get_float32_matmul_precision()={torch.get_float32_matmul_precision()}")
 
     iteration = 0
     if args.resume_from:
