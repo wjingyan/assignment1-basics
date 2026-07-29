@@ -1,6 +1,6 @@
 from typing import Optional
 from collections.abc import Callable, Iterable
-import math
+from math import sqrt, cos, pi
 import torch
 
 class SGD(torch.optim.Optimizer):
@@ -20,7 +20,7 @@ class SGD(torch.optim.Optimizer):
                 state = self.state[p] # Get state associated with p.
                 t = state.get("t", 0) # Get iteration number from the state, or initial value.
                 grad = p.grad.data # Get the gradient of loss with respect to p.
-                p.data -= lr / math.sqrt(t + 1) * grad # Update weight tensor in-place.
+                p.data -= lr / sqrt(t + 1) * grad # Update weight tensor in-place.
                 state["t"] = t + 1 # Increment iteration number.
         return loss
 
@@ -47,7 +47,7 @@ class AdamW(torch.optim.Optimizer):
                 t = state.get("t", 1)
                 m = beta1 * m + (1 - beta1) * p.grad.data
                 v = beta2 * v + (1 - beta2) * p.grad.data**2
-                lr_t = lr * math.sqrt(1 - beta2**t) / (1 - beta1**t)
+                lr_t = lr * sqrt(1 - beta2**t) / (1 - beta1**t)
                 p.data -= lr_t * (m / (torch.sqrt(v) + eps)) + lr * weight_decay * p.data
                 state["t"] = t + 1
                 state["m"] = m
