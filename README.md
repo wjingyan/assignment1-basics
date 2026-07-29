@@ -223,9 +223,22 @@ scp -P <pod-port> -i <identity_file> \
     output/encoding/encoded_tinystories_train.npy \
     output/encoding/encoded_tinystories_valid.npy \
     <pod-user>@<pod-host>:/workspace/assignment1-basics/output/encoding/
-
-scp -P 14125 -i ~/.ssh/id_ed25519 \
-    output/encoding/encoded_tinystories_train.npy \
-    output/encoding/encoded_tinystories_valid.npy \
-    root@38.128.232.177:/workspace/assignment1-basics/output/encoding/
 ```
+
+# Generate
+uv run cs336_basics/generate.py \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --theta 10000 \
+    --checkpoint-path checkpoints/cloud/ckpt_38500.pt \
+    --device mps \
+    --prompt "Once upon a time" \
+    --max-new-tokens 5 \
+    --temp 0.01 \
+    --top-p-threshold 1 \
+    --vocab-file tokenizer_output/vocab_tinystories_train.json \
+    --merges-file tokenizer_output/merges_tinystories_train.json

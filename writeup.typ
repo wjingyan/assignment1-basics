@@ -130,3 +130,15 @@ Optimizer flops are
 `13*(48*(16*1600*1600+2*1600) +1600+2*1600*50257) = 27,651,748,800 ~ 0.28 TFLOPs`
 Total FLOPS per step = 13855 TFLOPs
 `400000*13855/19.5/0.5/24/3600/365=18 years`
+
+7.2 learning_rate
+(a) I used different log scale 1e-4, 3e-4(default), 1e-3, 3e-3, 3e-2. 1e-2 showed divergent val loss
+(b) The best learning rate is slightly below the divergent learning rate
+
+batch_size_experiment
+Larger batch size converges faster. However with same training budget (tokens) smaller batch size leads to better validation loss. Ie. even with adjusted learning rate (x2 batch size x2 learning rate), the learning is not doubly efficient.
+
+generate
+Once upon a time.
+The little girl was very sad and she started to cry. She said, "Please, let me go, I'm so sorry." But the little girl just shook her head and said, "No, I won't let you go. I don't want to be your friend."
+The little girl was so scared that she ran away. She never saw the big, scary house again.

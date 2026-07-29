@@ -1,65 +1,13 @@
-from collections.abc import Callable, Iterable
-from typing import Optional
 import argparse
 import time
-import torch
 import math
 from math import cos, pi
 import os, typing
 import numpy as np
 
 from cs336_basics.lm import TransformerLM, cross_entropy, RoPE
-
-class SGD(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3):
-        if lr < 0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        defaults = {"lr": lr}
-        super().__init__(params, defaults)
-
-    def step(self, closure: Optional[Callable] = None):
-        loss = None if closure is None else closure()
-        for group in self.param_groups:
-            lr = group["lr"] # Get the learning rate.
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
-                state = self.state[p] # Get state associated with p.
-                t = state.get("t", 0) # Get iteration number from the state, or initial value.
-                grad = p.grad.data # Get the gradient of loss with respect to p.
-                p.data -= lr / math.sqrt(t + 1) * grad # Update weight tensor in-place.
-                state["t"] = t + 1 # Increment iteration number.
-        return loss
-
-class AdamW(torch.optim.Optimizer):
-    def __init__(self, params, lr, weight_decay, betas=(0.9, 0.999), eps=1e-8):
-        if lr < 0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        defaults = {"lr": lr, "betas": betas, "eps": eps, "weight_decay": weight_decay} # group params
-        super().__init__(params, defaults)
-    
-    def step(self, closure: Optional[Callable] = None):
-        loss = None if closure is None else closure()
-        for group in self.param_groups:
-            lr = group["lr"]
-            beta1, beta2 = group["betas"][0], group["betas"][1]
-            eps = group["eps"]
-            weight_decay = group["weight_decay"]
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
-                state = self.state[p]
-                m = state.get("m", 0)
-                v = state.get("v", 0)
-                t = state.get("t", 1)
-                m = beta1 * m + (1 - beta1) * p.grad.data
-                v = beta2 * v + (1 - beta2) * p.grad.data**2
-                lr_t = lr * math.sqrt(1 - beta2**t) / (1 - beta1**t)
-                p.data -= lr_t * (m / (torch.sqrt(v) + eps)) + lr * weight_decay * p.data
-                state["t"] = t + 1
-                state["m"] = m
-                state["v"] = v
-        return loss
+from cs336_basics.utils import init_model_from_args, init_optimizer_from_args, init_rope_from_args, load_checkpoint, save_checkpoint
+from cs336_basics.optimizer import learning_rate_schedule, gradient_clipping
 
 def simple_training_loop():
     weights = torch.nn.Parameter(5 * torch.randn((10, 10)))
@@ -70,35 +18,6 @@ def simple_training_loop():
         print(loss.cpu().item())
         loss.backward() # Run backward pass, which computes gradients.
         opt.step() # Run optimizer step.
-
-def learning_rate_schedule(t, lr_max, lr_min, t_w, t_c):
-    """
-    Given the parameters of a cosine learning rate decay schedule (with linear
-    warmup) and an iteration number, return the learning rate at the given
-    iteration under the specified schedule.
-
-    Args:
-        t (int): Iteration number to get learning rate for.
-        lr_max (float): Maximum learning rate.
-        lr_min (float): Minimum learning rate.
-        t_w: warm up until t_w
-        t_c: cosine annealing until t_c
-    """
-    if t < t_w:
-        return t/t_w * lr_max
-    elif t <= t_c:
-        return lr_min + 0.5 * (1 + cos((t-t_w)*pi/(t_c-t_w)))*(lr_max-lr_min)
-    else: # t > t_c
-        return lr_min
-
-def gradient_clipping(params: Iterable[torch.nn.Parameter], max_l2_norm: float):
-    eps = 1e-6
-    params = list(params)
-    total_norm = torch.sqrt(sum(p.grad.data.pow(2).sum() for p in params if p.grad is not None))
-    if total_norm > max_l2_norm:
-        for p in params:
-            if not p.grad is None:
-                p.grad.data.mul_(max_l2_norm/(total_norm + eps))
 
 def load_data(x, batch_size, context_length, device):
     """
@@ -123,51 +42,6 @@ def load_data(x, batch_size, context_length, device):
     inputs = torch.stack([torch.tensor(x[i:i+context_length], dtype=torch.long) for i in start_indices])
     targets = torch.stack([torch.tensor(x[i+1:i+context_length+1], dtype=torch.long) for i in start_indices])
     return inputs.to(device), targets.to(device)
-
-def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer, iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
-    model_state = model.state_dict()
-    optimizer_state = optimizer.state_dict()
-    checkpoint = {
-        "model_state": model_state,
-        "optimizer_state": optimizer_state,
-        "iteration": iteration,
-    }
-    torch.save(checkpoint, out)
-
-def load_checkpoint(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes], model: torch.nn.Module, optimizer: torch.optim.Optimizer):
-    checkpoint = torch.load(src)
-    model.load_state_dict(checkpoint["model_state"])
-    optimizer.load_state_dict(checkpoint["optimizer_state"])
-    return checkpoint["iteration"]
-
-def init_model_from_args(args, device, dtype):
-    return TransformerLM(
-        vocab_size=args.vocab_size,
-        context_length=args.context_length,
-        d_model=args.d_model,
-        num_layers=args.num_layers,
-        num_heads=args.num_heads,
-        d_ff=args.d_ff,
-        device=device,
-        dtype=dtype,
-    )
-
-def init_optimizer_from_args(args, params):
-    return AdamW(
-        params,
-        lr=args.lr_max,
-        weight_decay=args.weight_decay,
-        betas=(args.beta1, args.beta2),
-        eps=args.eps,
-    )
-
-def init_rope_from_args(args, device):
-    return RoPE(
-        theta = args.theta,
-        d_k = args.d_model // args.num_heads,
-        max_seq_len = args.context_length,
-        device = device
-    )
 
 @torch.no_grad()
 def estimate_val_loss(model, rope, val_data, batch_size, context_length, device, eval_iters):
@@ -207,7 +81,7 @@ def do_train(args):
 
     iteration = 0
     if args.resume_from:
-        iteration = load_checkpoint(args.resume_from, model, optimizer)
+        iteration = load_checkpoint(args.resume_from, model, device, optimizer)
 
     use_wandb = args.wandb_project is not None
     if use_wandb:

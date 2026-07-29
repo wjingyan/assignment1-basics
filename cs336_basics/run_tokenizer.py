@@ -4,7 +4,9 @@ import os
 import sys
 import time
 import numpy as np
+
 from cs336_basics.tokenizer import Tokenizer
+from cs336_basics.utils import init_tokenizer_from_args
 
 def main():
     """
@@ -12,13 +14,13 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Run BPE tokenizer on input text.")
     parser.add_argument(
-        "--vocab", 
+        "--vocab-file", 
         type=str, 
         required=True, 
         help="Path to the vocabulary JSON file (e.g., tokenizer_output/vocab_tinystories_train.json)."
     )
     parser.add_argument(
-        "--merges", 
+        "--merges-file", 
         type=str, 
         required=True, 
         help="Path to the merges JSON file (e.g., tokenizer_output/merges_tinystories_train.json)."
@@ -44,17 +46,10 @@ def main():
 
     args = parser.parse_args()
 
-    # Validate paths
-    if not os.path.exists(args.vocab):
-        sys.exit(f"Error: Vocab file not found at {args.vocab}")
-    if not os.path.exists(args.merges):
-        sys.exit(f"Error: Merges file not found at {args.merges}")
     if not os.path.exists(args.input):
         sys.exit(f"Error: Input file not found at {args.input}")
 
-    print(f"Loading tokenizer from:\n  Vocab: {args.vocab}\n  Merges: {args.merges}")
-    tokenizer = Tokenizer.from_files(args.vocab, args.merges, args.special_tokens)
-
+    tokenizer = init_tokenizer_from_args(args)
     original_bytes = os.path.getsize(args.input)
     print(f"Encoding {args.input} ({original_bytes} bytes) using streaming...")
     

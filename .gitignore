@@ -182,3 +182,4 @@ env_wandb
 checkpoints/*
 wandb/*
 cs336_basics/sweep.sh
+.vscode/
