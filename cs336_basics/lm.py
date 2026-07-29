@@ -254,6 +254,8 @@ class TransformerBlock(torch.nn.Module):
         sublayer1 = x + self.attn(sublayer1, rope)
         sublayer2 = self.ln2(sublayer1)
         sublayer2 = sublayer1 + self.ffn(sublayer2)
+        # sublayer1 = x + self.attn(x, rope)
+        # sublayer2 = sublayer1 + self.ffn(sublayer1)
         return sublayer2
 
 class TransformerLM(torch.nn.Module):

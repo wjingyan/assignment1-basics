@@ -1,9 +1,9 @@
 import argparse
 import time
-import math
-from math import cos, pi
+
 import os, typing
 import numpy as np
+import torch
 
 from cs336_basics.lm import TransformerLM, cross_entropy, RoPE
 from cs336_basics.utils import init_model_from_args, init_optimizer_from_args, init_rope_from_args, load_checkpoint, save_checkpoint
