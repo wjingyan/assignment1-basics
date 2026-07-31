@@ -142,3 +142,8 @@ generate
 Once upon a time.
 The little girl was very sad and she started to cry. She said, "Please, let me go, I'm so sorry." But the little girl just shook her head and said, "No, I won't let you go. I don't want to be your friend."
 The little girl was so scared that she ran away. She never saw the big, scary house again.
+
+7.3 abalations
+layer_norm_ablations
+Using same learning rate and comparing baseline and no RMSNorm, both training and validation started higher then No RMSNorm tracked closely with baseline (0.03 val loss difference by 5000 steps) except for a spike at train step 780 to 200+ and spike to 7 at 1400 step for validation. When I moved to lower learning rate (3e-4), there's no more spikes.
+RMSNorm stablizes training and allows for higher learning rate, without which training relies on gradient clipping to go back to stability.

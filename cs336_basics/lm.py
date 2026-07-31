@@ -67,7 +67,11 @@ class RMSNorm(torch.nn.Module):
         result = x * self.weights / rms
         # Return the result in the original dtype
         return result.to(in_dtype)
-
+"""
+SwiGLU
+FFN(x) = SwiGLU(x, W1, W2, W3) = W2(SiLU(W1·x) @ W3·x)
+W1,W3 [d_ff, d_model], W2 [d_model, d_ff] d_ff = 8/3 d_model while being multiple of 64
+"""
 class FeedForwardNetwork(torch.nn.Module):
     def __init__(self, d_model: int, d_ff: int,device=None, dtype=None):
         super().__init__()
@@ -106,6 +110,42 @@ class FeedForwardNetwork(torch.nn.Module):
         silu = w1_x * torch.sigmoid(w1_x)
         elementwise_mul = silu * w3_x
         return einsum(elementwise_mul, self.w2, "... d_ff, d_ff d_model -> ... d_model")
+
+"""
+SiLU
+FFN(x) = SiLU(x, W1, W2) = W2SiLU(W1·x)
+W1 [d_ff, d_model], W2 [d_model, d_ff] d_ff = 4 x d_model while being multiple of 64
+"""
+class SiLUFeedForwardNetwork(torch.nn.Module):
+    def __init__(self, d_model: int, d_ff: int,device=None, dtype=None):
+        super().__init__()
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.device = device
+        self.dtype = dtype
+
+        # Initialize weight tensor
+        self.w1 = torch.nn.Parameter(
+            torch.empty((d_model, d_ff), device=device, dtype=dtype)
+        )
+        self.w2 = torch.nn.Parameter(
+            torch.empty((d_ff, d_model), device=device, dtype=dtype)
+        )
+
+        # Apply Xavier Truncated Normal initialization
+        sigma = math.sqrt(2.0 / (d_model + d_ff))
+        torch.nn.init.trunc_normal_(
+            self.w1, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        torch.nn.init.trunc_normal_(
+            self.w2, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """(batch_size, seq_len, d_model) -> (batch_size, seq_len, d_model)"""
+        w1_x = einsum(x, self.w1, "... d_model, d_model d_ff -> ... d_ff")
+        silu = w1_x * torch.sigmoid(w1_x)
+        return einsum(silu, self.w2, "... d_ff, d_ff d_model -> ... d_model")
 
 class RoPE(torch.nn.Module):
     def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None):
@@ -245,6 +285,7 @@ class TransformerBlock(torch.nn.Module):
         self.dtype = dtype
         self.attn = MultiHeadAttention(d_model, num_heads, device=device, dtype=dtype)
         self.ffn = FeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
+        # self.ffn = SiLUFeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype)
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype)
 
@@ -254,8 +295,12 @@ class TransformerBlock(torch.nn.Module):
         sublayer1 = x + self.attn(sublayer1, rope)
         sublayer2 = self.ln2(sublayer1)
         sublayer2 = sublayer1 + self.ffn(sublayer2)
+        # no RMSNorm ablation
         # sublayer1 = x + self.attn(x, rope)
         # sublayer2 = sublayer1 + self.ffn(sublayer1)
+        # post norm ablation
+        # sublayer1 = self.ln1(x + self.attn(x, rope))
+        # sublayer2 = self.ln2(sublayer1 + self.ffn(sublayer1))
         return sublayer2
 
 class TransformerLM(torch.nn.Module):

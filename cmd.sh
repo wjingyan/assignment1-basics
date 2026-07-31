@@ -386,3 +386,161 @@ uv run cs336_basics/train.py \
     --wandb-project cs336-basics \
     --wandb-run-name ablation_normsnorm \
     --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+# Lower lr
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_normsnorm_lr3e-4 \
+    --lr-max 3e-4 --lr-min 3e-5 --cosine-cycle-iters 5000
+
+# prenorm
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_prenorm_baseline_a100 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+# postnorm
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_prenorm_a100 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+runpodctl stop pod $RUNPOD_POD_ID
+
+# Rope (baseline)
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_rope_baseline \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+# no pe
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_noPE \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+
+# Rope (baseline)
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_rope_baseline \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+# no pe
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_noPE \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+
+# SwiGLU (baseline)
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 1344 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_swiglu_baseline \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
+# SiLU
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_tinystories_train.npy \
+    --val-data output/encoding/encoded_tinystories_valid.npy \
+    --vocab-size 10000 \
+    --context-length 256 \
+    --d-model 512 \
+    --num-layers 4 \
+    --num-heads 16 \
+    --d-ff 2048 \
+    --batch-size 32 \
+    --max-iters 5000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/tinystories_ablation \
+    --wandb-project cs336-basics \
+    --wandb-run-name ablation_silu \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000

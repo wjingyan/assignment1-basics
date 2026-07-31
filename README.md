@@ -153,7 +153,7 @@ uv run cs336_basics/train.py \
     --max-iters 5000 \
     --checkpoint-dir checkpoints/tinystories \
     --wandb-project cs336-basics
-## Local cpu run
+## Local cpu run 1 step
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_tinystories_train.npy \
     --val-data output/encoding/encoded_tinystories_valid.npy \
@@ -214,8 +214,11 @@ cd workspace
 git clone https://github.com/wjingyan/assignment1-basics.git
 cd assignment1-basics
 mkdir -p output/encoding
-wandb login <your_api_key>
-uv sync
+
+uv run wandb login <your_api_key>
+
+# stop pod
+runpodctl stop pod $RUNPOD_POD_ID
 ```
 ## SCP .npy
 ```
