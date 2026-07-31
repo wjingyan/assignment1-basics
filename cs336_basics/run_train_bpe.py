@@ -52,7 +52,7 @@ def main():
         print(f"Error: Input file not found at {input_path}")
         print("Please make sure you have downloaded the datasets as per the assignment instructions.")
         return
-
+    print(f"input_path={input_path}")
     # --- Run Training ---
     run_bpe_training_and_save(
         input_path=input_path,

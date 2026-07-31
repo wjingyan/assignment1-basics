@@ -81,14 +81,14 @@ gunzip -f owt_valid.txt.gz
 
 cd ..
 ```
-# Commands
-# Part 2
+# Part 2 Tokenization
 uv run pytest tests/test_train_bpe.py
 uv run pytest tests/test_train_bpe.py::test_train_bpe_speed
 uv run cs336_basics/tokenizer.py
 uv run cs336_basics/resource_monitor.py
 uv run cs336_basics/run_train_bpe.py --dataset tinystories --split train
 uv run cs336_basics/run_train_bpe.py --dataset owt --split valid
+uv run cs336_basics/run_train_bpe.py --dataset owt --split train
 # Profile
 # Profile the script running on the TinyStories validation set
 uv run python -m cProfile -s cumulative cs336_basics/run_train_bpe.py --dataset tinystories --split validation
@@ -168,8 +168,9 @@ uv run cs336_basics/train.py \
     --eval-iters 50 \
     --checkpoint-dir checkpoints/tinystories_test
 # Cloud run
-## smoke test
+
 ```
+## smoke test
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_tinystories_train.npy \
     --val-data output/encoding/encoded_tinystories_valid.npy \

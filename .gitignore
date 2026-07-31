@@ -163,8 +163,6 @@ cython_debug/
 *.zip
 data/*
 tests/.DS_Store
-tokenizer/vocab_owt.json
-tokenizer/vocab_tinystories.json
 tests/fixtures/debug.txt
 cs336_basics/ai_tokenizer.py
 cs336_basics/debug.py
@@ -172,7 +170,6 @@ assignment_text.txt
 cs336_spring2025_assignment1_basics.pdf
 resource_log.txt
 cs336_basics/pretokenization_example.py
-cs336_spring2025_assignment1_basics.pdf
 .DS_Store
 scalene*
 tokenizer_output/*

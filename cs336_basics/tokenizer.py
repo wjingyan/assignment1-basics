@@ -278,6 +278,8 @@ def train_bpe(
                 token_to_words[token].add(new_word)
         # print(f" byte_pair_freqs[(b' t', b'h')]: {byte_pair_freqs.get((b' t', b'h'), 0)}")
         # print(f" byte_pair_freqs[(b'h', b'e')]: {byte_pair_freqs.get((b'h', b'e'), 0)}")
+        if next_token_id % 100 == 0:
+            print(f"next_token_id={next_token_id}")
   
         next_token_id += 1
 
