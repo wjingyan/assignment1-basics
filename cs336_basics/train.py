@@ -106,8 +106,10 @@ def do_train(args):
             group["lr"] = lr
 
         inputs, targets = load_data(train_data, args.batch_size, args.context_length, device)
-        logits = model(inputs, rope)
-        loss = cross_entropy(logits, targets)
+        
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device.startswith("cuda")):
+            logits = model(inputs, rope)
+            loss = cross_entropy(logits, targets)
 
         optimizer.zero_grad()
         loss.backward()
