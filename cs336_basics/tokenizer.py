@@ -6,6 +6,7 @@ import os
 import time
 import json
 import psutil
+from math import ceil
 from cs336_basics.pretokenization_example import find_chunk_boundaries
 
 class Tokenizer:
@@ -108,7 +109,8 @@ class Tokenizer:
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
 
-def _process_chunk(input_path: str, start: int, end: int, pattern: str) -> dict[tuple[bytes, ...], int]:
+def _process_chunk(args) -> dict[tuple[bytes, ...], int]:
+    input_path, start, end, pattern = args
     local_word_freqs = defaultdict(int)
     
     with open(input_path, "rb") as f:
@@ -165,21 +167,24 @@ def train_bpe(
     pretok_start_time = time.time()
 
     word_freqs = defaultdict(int)
-    num_processes = multiprocessing.cpu_count()
-    print(f"input_path: {input_path}, using {num_processes} processes for pre-tokenization")
+    num_processes = os.process_cpu_count()
+    file_size = os.path.getsize(input_path)
+    max_chunk_size = 100 * 1024 * 1024 # 100 MB
+    desired_num_chunks = max(num_processes, ceil(file_size / max_chunk_size))
+    print(f"input_path: {input_path}, desired_num_chunks = {desired_num_chunks} using {num_processes} processes for pre-tokenization")
     with open(input_path, "rb") as f:
-        boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
+        boundaries = find_chunk_boundaries(f, desired_num_chunks, b"<|endoftext|>")
 
     
     pool_args = [(input_path, boundaries[i], boundaries[i+1], pattern) for i in range(len(boundaries)-1)]
 
     with multiprocessing.Pool(processes=num_processes) as pool:
-        results = pool.starmap(_process_chunk, pool_args)
+        results = pool.imap_unordered(_process_chunk, pool_args, chunksize=1)
 
-    # Merge word_freqs from all subprocesses
-    for local_freqs in results:
-        for word_bytes, count in local_freqs.items():
-            word_freqs[word_bytes] += count
+        # Merge word_freqs from all subprocesses
+        for local_freqs in results:
+            for word_bytes, count in local_freqs.items():
+                word_freqs[word_bytes] += count
 
     pretok_end_time = time.time()
     print(f"Pre-tokenization took {pretok_end_time - pretok_start_time:.2f} seconds.")

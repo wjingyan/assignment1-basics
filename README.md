@@ -89,7 +89,31 @@ uv run cs336_basics/resource_monitor.py
 uv run cs336_basics/run_train_bpe.py --dataset tinystories --split train
 uv run cs336_basics/run_train_bpe.py --dataset owt --split valid
 uv run cs336_basics/run_train_bpe.py --dataset owt --split train
-# Profile
+
+## Cloud tokenizer training
+```
+mkdir -p data
+cd data
+
+wget https://huggingface.co/datasets/stanford-cs336/owt-sample/resolve/main/owt_train.txt.gz
+gunzip owt_train.txt.gz
+cd ..
+
+uv run cs336_basics/run_train_bpe.py --dataset owt --split train
+```
+
+## Tokenizer Training Benchmark: TinyStories vs OWT
+
+| Metric | TinyStories (train) | OWT (train) |
+| --- | --- | --- |
+| File size | TBD | TBD |
+| Pretokenization time | TBD |  |
+| Processes | TBD | 4 |
+| Peak memory usage | TBD |  |
+| Merge time | TBD | TBD |
+| Total time | TBD | TBD |
+
+## Profile Tokenization
 # Profile the script running on the TinyStories validation set
 uv run python -m cProfile -s cumulative cs336_basics/run_train_bpe.py --dataset tinystories --split validation
 # Profile the script using Scalene
@@ -127,8 +151,8 @@ uv run cs336_basics/run_tokenizer.py \
     --input data/TinyStoriesV2-GPT4-valid.txt \
     --output output/encoding/encoded_tinystories_valid.npy
 uv run cs336_basics/run_tokenizer.py \
-    --vocab tokenizer_output/vocab_owt_valid.json \
-    --merges tokenizer_output/merges_owt_valid.json \
+    --vocab tokenizer_output/vocab_owt_train.json \
+    --merges tokenizer_output/merges_owt_train.json \
     --input data/owt_train.txt \
     --output output/encoding/encoded_owt_train.npy
 uv run cs336_basics/run_tokenizer.py \

@@ -1,0 +1,16 @@
+% uv run cs336_basics/run_train_bpe.py --dataset owt --split train
+input_path=data/owt_train.txt
+input_path: data/owt_train.txt, desired_num_chunks = 114 using 8 processes for pre-tokenization
+Pre-tokenization took 753.60 seconds.
+Merging took 15624.25 seconds.
+Total train_bpe function time: 16377.86 seconds.
+Trained BPE vocab size: 32000
+Trained BPE merges count: 31743
+Longest vocabulary token: '---------------------------' (length: 27)
+Writing vocabulary to tokenizer_output/vocab_owt_train.json...
+Writing merges to tokenizer_output/merges_owt_train.json...
+
+--- Profiling ---
+Total execution time: 16381.22 seconds
+Peak memory usage: 2924.14 MB
+For more detailed profiling, run with scalene: `scalene cs336_basics/run_train_bpe.py ...`

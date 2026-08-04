@@ -66,8 +66,9 @@ def main():
         print(f"Throughput: {original_bytes / duration:.2f} bytes/second")
 
     print(f"Serializing {num_tokens} tokens to {args.output} as uint16...")
-    ids_array = np.array(ids, dtype=np.uint16)
-    np.save(args.output, ids_array)
+    arr = np.lib.format.open_memmap(args.output, mode="w+", dtype=np.uint16, shape=(len(ids),))
+    arr[:] = np.array(ids, dtype=np.uint16)
+    arr.flush()
 
 if __name__ == "__main__":
     main()

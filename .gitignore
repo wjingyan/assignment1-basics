@@ -180,3 +180,4 @@ checkpoints/*
 wandb/*
 cs336_basics/sweep.sh
 .vscode/
+cs336_assignment1_basics_26.pdf
