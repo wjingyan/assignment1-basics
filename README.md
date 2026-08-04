@@ -177,7 +177,7 @@ uv run cs336_basics/train.py \
     --max-iters 5000 \
     --checkpoint-dir checkpoints/tinystories \
     --wandb-project cs336-basics
-## Local cpu run 1 step
+## Local mps run 1 step
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_tinystories_train.npy \
     --val-data output/encoding/encoded_tinystories_valid.npy \
@@ -190,7 +190,9 @@ uv run cs336_basics/train.py \
     --batch-size 32 \
     --max-iters 1 \
     --eval-iters 50 \
-    --checkpoint-dir checkpoints/tinystories_test
+    --device mps \
+    --checkpoint-dir checkpoints/tinystories_test \
+    --save-interval -1
 # Cloud run
 
 ```
@@ -240,7 +242,7 @@ git clone https://github.com/wjingyan/assignment1-basics.git
 cd assignment1-basics
 mkdir -p output/encoding
 
-uv run wandb login <your_api_key>
+uv run wandb login <your_api_key> # Will take a few mins
 
 # stop pod
 runpodctl stop pod $RUNPOD_POD_ID
