@@ -215,23 +215,27 @@ uv run cs336_basics/train.py \
     --wandb-run-name cloud_smoketest
 ```
 
-## 5000 steps train
+## main experiment
 ```
+# owt full
 uv run cs336_basics/train.py \
-    --train-data output/encoding/encoded_tinystories_train.npy \
-    --val-data output/encoding/encoded_tinystories_valid.npy \
-    --vocab-size 10000 \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
     --context-length 256 \
     --d-model 512 \
     --num-layers 4 \
     --num-heads 16 \
     --d-ff 1344 \
-    --batch-size 32 \
-    --max-iters 1000 \
+    --batch-size 64 \
+    --max-iters 100000 \
     --device cuda \
-    --checkpoint-dir checkpoints/tinystories_cloud \
+    --checkpoint-dir checkpoints/owt \
+    --save-interval 5000 \
     --wandb-project cs336-basics \
-    --wandb-run-name fixed-train-1000s
+    --wandb-run-name owt_lr1e-3 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 100000
+runpodctl stop pod $RUNPOD_POD_ID
 ```
 
 ## On cloud device
@@ -250,8 +254,8 @@ runpodctl stop pod $RUNPOD_POD_ID
 ## SCP .npy
 ```
 scp -P <pod-port> -i <identity_file> \
-    output/encoding/encoded_tinystories_train.npy \
-    output/encoding/encoded_tinystories_valid.npy \
+    output/encoding/encoded_owt_train.npy \
+    output/encoding/encoded_owt_valid.npy \
     <pod-user>@<pod-host>:/workspace/assignment1-basics/output/encoding/
 ```
 
@@ -272,3 +276,4 @@ uv run cs336_basics/generate.py \
     --top-p-threshold 1 \
     --vocab-file tokenizer_output/vocab_tinystories_train.json \
     --merges-file tokenizer_output/merges_tinystories_train.json
+

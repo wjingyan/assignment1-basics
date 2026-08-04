@@ -683,11 +683,12 @@ uv run cs336_basics/train.py \
     --num-layers 4 \
     --num-heads 16 \
     --d-ff 1344 \
-    --batch-size 32 \
-    --max-iters 40000 \
+    --batch-size 64 \
+    --max-iters 100000 \
     --device cuda \
     --checkpoint-dir checkpoints/owt \
     --save-interval 5000 \
     --wandb-project cs336-basics \
     --wandb-run-name owt_lr1e-3 \
-    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 40000
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 100000
+runpodctl stop pod $RUNPOD_POD_ID
