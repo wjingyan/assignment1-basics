@@ -188,10 +188,10 @@ uv run cs336_basics/train.py \
     --num-heads 16 \
     --d-ff 1344 \
     --batch-size 32 \
-    --max-iters 1 \
+    --max-iters 20 \
     --eval-iters 50 \
     --device mps \
-    --checkpoint-dir checkpoints/tinystories_test \
+    --checkpoint-dir checkpoints/test \
     --save-interval -1
 # Cloud run
 

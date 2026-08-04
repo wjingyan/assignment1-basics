@@ -136,7 +136,7 @@ Total FLOPS per step = 13855 TFLOPs
 (b) The best learning rate is slightly below the divergent learning rate
 
 batch_size_experiment
-Larger batch size converges faster. However with same training budget (tokens) smaller batch size leads to better validation loss. Ie. even with adjusted learning rate (x2 batch size x2 learning rate), the learning is not doubly efficient.
+Larger batch size converges faster. However past certain point, larger batch size gives worse loss on same token budget. 16: 1.67, 32: 1.65, 64: 1.64, 128: 1.71 (starts to get worse), 256: 1.96. 
 
 generate
 Once upon a time.
@@ -147,3 +147,7 @@ The little girl was so scared that she ran away. She never saw the big, scary ho
 layer_norm_ablations
 Using same learning rate and comparing baseline and no RMSNorm, both training and validation started higher then No RMSNorm tracked closely with baseline (0.03 val loss difference by 5000 steps) except for a spike at train step 780 to 200+ and spike to 7 at 1400 step for validation. When I moved to lower learning rate (3e-4), there's no more spikes.
 RMSNorm stablizes training and allows for higher learning rate, without which training relies on gradient clipping to go back to stability.
+
+7.4 main_experiement
+Loss of training OpenWebText (3.95) is much higher than TinyStories (1.34)
+

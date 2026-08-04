@@ -128,6 +128,10 @@ def do_train(args):
 
         if args.save_interval > 0 and i % args.save_interval == 0 and i > 0:
             save_checkpoint(model, optimizer, i, os.path.join(args.checkpoint_dir, f"ckpt_{i}.pt"))
+        
+        if elapsed > 2700:
+            logging.info("Reached 45 min time limit. Exiting...")
+            return
 
     save_checkpoint(model, optimizer, args.max_iters, os.path.join(args.checkpoint_dir, "ckpt_final.pt"))
     if use_wandb:

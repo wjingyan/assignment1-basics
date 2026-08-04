@@ -546,10 +546,6 @@ uv run cs336_basics/train.py \
     --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
 
 # OWT
-scp -P 22118 -i ~/.ssh/id_ed25519 \
-    output/encoding/encoded_owt_train.npy \
-    output/encoding/encoded_owt_valid.npy \
-    root@69.30.85.213:/workspace/assignment1-basics/output/encoding/
 # 1000 step sweep
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_owt_train.npy \
@@ -562,7 +558,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -580,7 +576,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -598,7 +594,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -616,7 +612,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -634,7 +630,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -652,7 +648,7 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
@@ -670,13 +666,14 @@ uv run cs336_basics/train.py \
     --d-ff 1344 \
     --batch-size 32 \
     --max-iters 1000 \
-    --save_interval -1 \
+    --save-interval -1 \
     --device cuda \
     --checkpoint-dir checkpoints/owt_sweep \
     --wandb-project cs336-basics \
     --wandb-run-name owt_sweep_lr1e-1 \
     --lr-max 1e-1 --lr-min 1e-1 --cosine-cycle-iters 1000
 
+# owt full
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_owt_train.npy \
     --val-data output/encoding/encoded_owt_valid.npy \
@@ -687,28 +684,10 @@ uv run cs336_basics/train.py \
     --num-heads 16 \
     --d-ff 1344 \
     --batch-size 32 \
-    --max-iters 5000 \
-    --save_interval -1 \
+    --max-iters 40000 \
     --device cuda \
-    --checkpoint-dir checkpoints/owt_sweep \
+    --checkpoint-dir checkpoints/owt \
+    --save-interval 5000 \
     --wandb-project cs336-basics \
-    --wandb-run-name owt_sweep_lr1e-3_5000s \
-    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 5000
-
-uv run cs336_basics/train.py \
-    --train-data output/encoding/encoded_owt_train.npy \
-    --val-data output/encoding/encoded_owt_valid.npy \
-    --vocab-size 32000 \
-    --context-length 256 \
-    --d-model 512 \
-    --num-layers 4 \
-    --num-heads 16 \
-    --d-ff 1344 \
-    --batch-size 32 \
-    --max-iters 5000 \
-    --save_interval -1 \
-    --device cuda \
-    --checkpoint-dir checkpoints/owt_sweep \
-    --wandb-project cs336-basics \
-    --wandb-run-name owt_sweep_lr3e-3_5000s \
-    --lr-max 3e-3 --lr-min 3e-4 --cosine-cycle-iters 5000
+    --wandb-run-name owt_lr1e-3 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 40000
