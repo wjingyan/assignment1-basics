@@ -105,14 +105,14 @@ def do_train(args):
         for group in optimizer.param_groups:
             group["lr"] = lr
 
-        inputs, targets = load_data(train_data, args.batch_size, args.context_length, device)
-        
-        with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device.startswith("cuda")):
-            logits = model(inputs, rope)
-            loss = cross_entropy(logits, targets)
-
         optimizer.zero_grad()
-        loss.backward()
+        for _ in range(args.accum_steps):
+            inputs, targets = load_data(train_data, args.batch_size, args.context_length, device)
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device.startswith("cuda")):
+                logits = model(inputs, rope)
+                loss = cross_entropy(logits, targets)
+                loss = loss / args.accum_steps
+                loss.backward()
         gradient_clipping(model.parameters(), args.grad_clip)
         optimizer.step()
 
@@ -167,7 +167,8 @@ def parse_args():
     opt.add_argument("--grad-clip", type=float, default=1.0)
 
     train_args = parser.add_argument_group("training")
-    train_args.add_argument("--batch-size", type=int, default=32)
+    train_args.add_argument("--batch-size", type=int, default=32, help="batch size, if accum-steps is set, this becomes micro-batch size. Effective batch = batch-size x accum-steps")
+    train_args.add_argument("--accum-steps", type=int, default=32, help="gradient accumulation steps. Default to 1")
     train_args.add_argument("--max-iters", type=int, default=5000)
     train_args.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     train_args.add_argument("--dtype", type=str, default="float32", choices=["float32", "float16", "bfloat16"])

@@ -673,7 +673,7 @@ uv run cs336_basics/train.py \
     --wandb-run-name owt_sweep_lr1e-1 \
     --lr-max 1e-1 --lr-min 1e-1 --cosine-cycle-iters 1000
 
-# owt full
+# owt baseline
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_owt_train.npy \
     --val-data output/encoding/encoded_owt_valid.npy \
@@ -691,4 +691,152 @@ uv run cs336_basics/train.py \
     --wandb-project cs336-basics \
     --wandb-run-name owt_lr1e-3 \
     --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 100000
+runpodctl stop pod $RUNPOD_POD_ID
+
+# owt-larger arch --d-model 1024 --num-layers 16 --num-heads 16 --d-ff 2730
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 200000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_test_d1024_1 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 200000
+runpodctl stop pod $RUNPOD_POD_ID
+
+# owt-large sweep
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr1e-1 \
+    --lr-max 1e-1 --lr-min 1e-2 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr3e-2 \
+    --lr-max 3e-2 --lr-min 3e-3 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr1e-2 \
+    --lr-max 1e-2 --lr-min 1e-3 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr3e-3 \
+    --lr-max 3e-3 --lr-min 3e-4 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr1e-3 \
+    --lr-max 1e-3 --lr-min 1e-4 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr3e-4 \
+    --lr-max 3e-4 --lr-min 3e-5 --cosine-cycle-iters 1000
+
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 16 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --batch-size 1 \
+    --max-iters 1000 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt_l_sweep_lr1e-5 \
+    --lr-max 1e-5 --lr-min 1e-6 --cosine-cycle-iters 1000
 runpodctl stop pod $RUNPOD_POD_ID
