@@ -245,8 +245,7 @@ cd workspace
 git clone https://github.com/wjingyan/assignment1-basics.git
 cd assignment1-basics
 mkdir -p output/encoding
-
-uv run wandb login <your_api_key> # Will take a few mins
+uv run wandb login <your_api_key> # This step will take a few mins
 
 # stop pod
 runpodctl stop pod $RUNPOD_POD_ID
@@ -261,19 +260,19 @@ scp -P <pod-port> -i <identity_file> \
 
 # Generate
 uv run cs336_basics/generate.py \
-    --vocab-size 10000 \
+    --vocab-size 32000 \
     --context-length 256 \
     --d-model 512 \
     --num-layers 4 \
     --num-heads 16 \
     --d-ff 1344 \
     --theta 10000 \
-    --checkpoint-path checkpoints/cloud/ckpt_38500.pt \
+    --checkpoint-path checkpoints/cloud/owt_baseline/ckpt_final.pt \
     --device mps \
     --prompt "Once upon a time" \
-    --max-new-tokens 5 \
-    --temp 0.01 \
-    --top-p-threshold 1 \
-    --vocab-file tokenizer_output/vocab_tinystories_train.json \
-    --merges-file tokenizer_output/merges_tinystories_train.json
+    --max-new-tokens 256 \
+    --temp 0.7 \
+    --top-p-threshold 0.9 \
+    --vocab-file tokenizer_output/vocab_owt_valid.json \
+    --merges-file tokenizer_output/merges_owt_valid.json
 

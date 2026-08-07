@@ -96,7 +96,11 @@ def load_checkpoint(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes],
     checkpoint = torch.load(src, map_location=device)
     # print(checkpoint)
     # print(f"model.lm_head.weight.mean() before ={model.lm_head.weight.mean()}")
-    model.load_state_dict(checkpoint["model_state"])
+    # Strip the "_orig_mod." prefix that torch.compile adds to state_dict keys,
+    # so checkpoints saved from a compiled model load into an uncompiled one.
+    model_state = checkpoint["model_state"]
+    orig_model_state = {k.replace("_orig_mod.", ""): v for k, v in model_state.items()}
+    model.load_state_dict(orig_model_state)
     # print(f"model.lm_head.weight.mean() after ={model.lm_head.weight.mean()}")
     # print(model)
     if optimizer:
@@ -104,7 +108,7 @@ def load_checkpoint(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes],
     return checkpoint["iteration"]
 
 def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer, iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
-    model_state = model.state_dict()
+    model_state = model._orig_mod.state_dict() if model._orig_mod else model.state_dict()
     optimizer_state = optimizer.state_dict()
     checkpoint = {
         "model_state": model_state,
