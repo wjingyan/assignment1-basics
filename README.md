@@ -238,13 +238,15 @@ uv run cs336_basics/train.py \
 runpodctl stop pod $RUNPOD_POD_ID
 ```
 
-## On cloud device
+## Pod startup command
 ```
 pip install uv
 cd workspace
 git clone https://github.com/wjingyan/assignment1-basics.git
 cd assignment1-basics
 mkdir -p output/encoding
+uv pip install huggingface_hub
+export HF_TOKEN=hf_your_token_here      # or: hf auth login
 uv run wandb login <your_api_key> # This step will take a few mins
 
 # stop pod
@@ -252,6 +254,7 @@ runpodctl stop pod $RUNPOD_POD_ID
 ```
 ## SCP .npy
 ```
+# Use `SSH over exposed TCP url`, looks like root@<ip_address>
 scp -P <pod-port> -i <identity_file> \
     output/encoding/encoded_owt_train.npy \
     output/encoding/encoded_owt_valid.npy \

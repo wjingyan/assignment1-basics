@@ -60,6 +60,7 @@ def init_model_from_args(args, device, dtype):
         num_layers=args.num_layers,
         num_heads=args.num_heads,
         d_ff=args.d_ff,
+        num_experts=args.num_experts,
         device=device,
         dtype=dtype,
     )
@@ -108,7 +109,8 @@ def load_checkpoint(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes],
     return checkpoint["iteration"]
 
 def save_checkpoint(model: torch.nn.Module, optimizer: torch.optim.Optimizer, iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
-    model_state = model._orig_mod.state_dict() if model._orig_mod else model.state_dict()
+    base = getattr(model, "_orig_mod", model)   # unwrap if compiled, else use model itself
+    model_state = base.state_dict()
     optimizer_state = optimizer.state_dict()
     checkpoint = {
         "model_state": model_state,

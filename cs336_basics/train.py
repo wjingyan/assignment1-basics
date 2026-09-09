@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import torch
 
-from cs336_basics.lm import TransformerLM, cross_entropy, RoPE
+from cs336_basics.lm import TransformerLM, cross_entropy, RoPE, MoE
 from cs336_basics.utils import init_model_from_args, init_optimizer_from_args, init_rope_from_args, load_checkpoint, save_checkpoint
 from cs336_basics.optimizer import learning_rate_schedule, gradient_clipping
 
@@ -65,6 +65,10 @@ def do_train(args):
     device = args.device
     dtype = getattr(torch, args.dtype)
 
+    # Only set moe_coef when moe is on
+    if args.num_experts == 1:
+        args.moe_coef = 0
+
     torch.manual_seed(args.seed)
 
     os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -82,10 +86,10 @@ def do_train(args):
 
     # acceleration
     # Compilation with Inductor is not supported on mps as of torch version 2.9.0.
-    if device.startswith('mps'):
-        model = torch.compile(model, backend="aot_eager")
-    else:
-        model = torch.compile(model)
+    # if device.startswith('mps'):
+    #     model = torch.compile(model, backend="aot_eager")
+    # else:
+    #     model = torch.compile(model)
     if device.startswith('cuda'):
         torch.set_float32_matmul_precision('high')
         logging.info(f"torch.get_float32_matmul_precision()={torch.get_float32_matmul_precision()}")
@@ -111,7 +115,8 @@ def do_train(args):
             with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=device.startswith("cuda")):
                 logits = model(inputs, rope)
                 loss = cross_entropy(logits, targets)
-                loss = loss / args.accum_steps
+                aux = sum(m.aux_loss for m in model.modules() if isinstance(m, MoE) and m.aux_loss)
+                loss = (loss + args.moe_coef * aux) / args.accum_steps
                 loss.backward()
         gradient_clipping(model.parameters(), args.grad_clip)
         optimizer.step()
@@ -154,6 +159,8 @@ def parse_args():
     model_args.add_argument("--num-heads", type=int, default=16)
     model_args.add_argument("--d-ff", type=int, default=1344)
     model_args.add_argument("--theta", type=int, default=10000)
+    model_args.add_argument("--num-experts", type=int, default=1, help="num_experts=1 -> dense FFN, aux_loss ignored, num_experts = 8 -> MoE with 8 experts")
+    model_args.add_argument("--moe-coef", type=float, default=0.01, help="aux loss weight (only used when MoE is on)")
 
     opt = parser.add_argument_group("optimizer")
     opt.add_argument("--lr-max", type=float, default=3e-4)

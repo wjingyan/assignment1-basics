@@ -276,7 +276,7 @@ class MultiHeadAttention(torch.nn.Module):
         return einsum(attn, self.o_proj, "... d_model, d_model d_out -> ... d_out")
 
 class TransformerBlock(torch.nn.Module):
-    def __init__(self, d_model: int, num_heads: int, d_ff: int, device=None, dtype=None):
+    def __init__(self, d_model: int, num_heads: int, d_ff: int, num_experts: int, device=None, dtype=None):
         super().__init__()
         self.d_model = d_model
         self.num_heads = num_heads
@@ -284,8 +284,11 @@ class TransformerBlock(torch.nn.Module):
         self.device = device
         self.dtype = dtype
         self.attn = MultiHeadAttention(d_model, num_heads, device=device, dtype=dtype)
-        self.ffn = FeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
-        # self.ffn = SiLUFeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
+        if num_experts > 1:
+            self.ffn = MoE(num_experts, d_model, d_ff, device, dtype)
+        else:
+            self.ffn = FeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
+            # self.ffn = SiLUFeedForwardNetwork(d_model, d_ff, device=device, dtype=dtype)
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype)
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype)
 
@@ -304,7 +307,7 @@ class TransformerBlock(torch.nn.Module):
         return sublayer2
 
 class TransformerLM(torch.nn.Module):
-    def __init__(self, vocab_size: int, context_length: int, d_model: int, num_layers: int, num_heads: int, d_ff: int, device=None, dtype=None):
+    def __init__(self, vocab_size: int, context_length: int, d_model: int, num_layers: int, num_heads: int, d_ff: int, num_experts: int, device=None, dtype=None):
         super().__init__()
         self.vocab_size = vocab_size
         self.context_length = context_length
@@ -316,7 +319,8 @@ class TransformerLM(torch.nn.Module):
         self.dtype = dtype
         self.token_embeddings = Embedding(vocab_size, d_model, device=device, dtype=dtype)
         for i in range(num_layers):
-            self.add_module(f"transformer_block_{i}", TransformerBlock(d_model, num_heads, d_ff, device=device, dtype=dtype))
+            layer_experts = num_experts if i % 2 == 0 else 1
+            self.add_module(f"transformer_block_{i}", TransformerBlock(d_model, num_heads, d_ff, layer_experts, device=device, dtype=dtype))
         self.ln_final = RMSNorm(d_model, device=device, dtype=dtype)
         self.lm_head = Linear(d_model, vocab_size, device=device, dtype=dtype)
     
@@ -337,3 +341,53 @@ def cross_entropy(logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     correct_logits = logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)  # (...)
 
     return (log_sum_exp - correct_logits).mean()
+
+class MoE(torch.nn.Module):
+    def __init__(self, num_experts, d_model, d_ff, device=None, dtype=None):
+        super().__init__()
+        self.num_experts = num_experts
+        self.gating = torch.nn.Parameter(
+            torch.empty((d_model, num_experts), device=device, dtype=dtype)
+        )
+        self.experts = torch.nn.ModuleList([FeedForwardNetwork(d_model, d_ff, device, dtype) for _ in range(num_experts)])
+        
+        # Apply Xavier Truncated Normal initialization
+        sigma = math.sqrt(2.0 / (d_model + d_ff))
+        torch.nn.init.trunc_normal_(
+            self.gating, mean=0.0, std=sigma, a=-3.0 * sigma, b=3.0 * sigma
+        )
+        self.aux_loss = None
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        def calc_aux_loss(num_experts, probs, flattened_expert_idx, num_tokens):
+            load_fraction = torch.bincount(flattened_expert_idx, minlength=num_experts) / num_tokens
+            mean_router_prob = probs.mean(dim=(0, 1))
+            return self.num_experts * (load_fraction * mean_router_prob).sum()
+
+        """(batch_size, seq_len, d_model) -> (batch_size, seq_len, d_model)"""
+        batch_size, seq_len, d_model = x.shape
+        # logits = x @ self.gating
+        logits = einsum(x, self.gating, "... d_model, d_model num_experts -> ... num_experts")
+        probs = softmax(logits, dim=-1) # B, seq, num_experts
+        gate_vals, expert_idx = torch.topk(probs, k=1, dim=-1) # [B, seq, 1], [B, seq, 1]
+        # print("gate_vals:", gate_vals.shape)
+        flattened_gate_vals, flattened_expert_idx = torch.squeeze(gate_vals), torch.squeeze(expert_idx) # [B, seq, 1] -> [T]
+        x_flat = x.reshape(-1, d_model) # B, seq, d_model -> T, d_model
+        # print("flattened_gate_vals:", flattened_gate_vals.shape, " flattened_expert_idx: ", flattened_expert_idx)
+        self.aux_loss = calc_aux_loss(self.num_experts, probs, flattened_expert_idx, batch_size * seq_len)
+        counts = []
+        out = torch.zeros_like(x_flat)
+        for i in range(self.num_experts):
+            mask = (flattened_expert_idx == i)
+            tokens_i = x_flat[mask] # [n_i, d_model]
+            # print(f"tokens_{i}:", tokens_i.shape)
+            out_i = self.experts[i](tokens_i)
+            out_i = out_i * flattened_gate_vals[mask].unsqueeze(-1) # [n_i, d_m] * ([n_i] unsqueezed to [n_i, 1])
+            out[mask] = out_i
+            counts.append(mask.sum())
+        out = out.reshape(batch_size, seq_len, d_model)
+        # print load
+        # counts = torch.bincount(flattened_expert_idx, minlength=self.num_experts)   # [num_experts] tensor
+        # imbalance = (counts.max() / counts.float().mean()).item()
+        # print("loads", counts.tolist(), f"imbalance={imbalance:.2f}")
+        return out
