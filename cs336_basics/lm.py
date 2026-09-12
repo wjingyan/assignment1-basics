@@ -360,6 +360,7 @@ class MoE(torch.nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         def calc_aux_loss(num_experts, probs, flattened_expert_idx, num_tokens):
+            # print(flattened_expert_idx.shape, flattened_expert_idx.dtype)
             load_fraction = torch.bincount(flattened_expert_idx, minlength=num_experts) / num_tokens
             mean_router_prob = probs.mean(dim=(0, 1))
             return self.num_experts * (load_fraction * mean_router_prob).sum()
@@ -371,7 +372,7 @@ class MoE(torch.nn.Module):
         probs = softmax(logits, dim=-1) # B, seq, num_experts
         gate_vals, expert_idx = torch.topk(probs, k=1, dim=-1) # [B, seq, 1], [B, seq, 1]
         # print("gate_vals:", gate_vals.shape)
-        flattened_gate_vals, flattened_expert_idx = torch.squeeze(gate_vals), torch.squeeze(expert_idx) # [B, seq, 1] -> [T]
+        flattened_gate_vals, flattened_expert_idx = gate_vals.reshape(-1), expert_idx.reshape(-1) # [B, seq, 1] -> [T]
         x_flat = x.reshape(-1, d_model) # B, seq, d_model -> T, d_model
         # print("flattened_gate_vals:", flattened_gate_vals.shape, " flattened_expert_idx: ", flattened_expert_idx)
         self.aux_loss = calc_aux_loss(self.num_experts, probs, flattened_expert_idx, batch_size * seq_len)

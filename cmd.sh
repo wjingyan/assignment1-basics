@@ -1291,6 +1291,7 @@ uv run cs336_basics/train.py \
     --checkpoint-dir checkpoints/test \
     --save-interval 5000 \
     --lr-max 1.5e-3 --lr-min 1.5e-4 --cosine-cycle-iters 2600
+
 # Moe cuda 1 batch test
 uv run cs336_basics/train.py \
     --train-data output/encoding/encoded_owt_train.npy \
@@ -1310,6 +1311,28 @@ uv run cs336_basics/train.py \
     --checkpoint-dir checkpoints/test \
     --save-interval 5000 \
     --wandb-project cs336-basics \
-    --wandb-run-name moe-smoketest \
+    --wandb-run-name moe-test-overfit2 \
     --lr-max 1.5e-3 --lr-min 1.5e-4 --cosine-cycle-iters 2600
+
 runpodctl stop pod $RUNPOD_POD_ID
+# MoE full
+uv run cs336_basics/train.py \
+    --train-data output/encoding/encoded_owt_train.npy \
+    --val-data output/encoding/encoded_owt_valid.npy \
+    --vocab-size 32000 \
+    --context-length 256 \
+    --d-model 1024 \
+    --num-layers 8 \
+    --num-heads 16 \
+    --d-ff 2730 \
+    --num-experts 8 \
+    --moe-coef 0.01 \
+    --batch-size 64 \
+    --max-iters 2600 \
+    --warmup-iters 100 \
+    --device cuda \
+    --checkpoint-dir checkpoints/test \
+    --save-interval 5000 \
+    --wandb-project cs336-basics \
+    --wandb-run-name owt-moe-d1024l8bs64lr1.5e-3-full \
+    --lr-max 1.5e-3 --lr-min 1.5e-4 --cosine-cycle-iters 2600

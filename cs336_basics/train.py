@@ -175,7 +175,7 @@ def parse_args():
 
     train_args = parser.add_argument_group("training")
     train_args.add_argument("--batch-size", type=int, default=32, help="batch size, if accum-steps is set, this becomes micro-batch size. Effective batch = batch-size x accum-steps")
-    train_args.add_argument("--accum-steps", type=int, default=32, help="gradient accumulation steps. Default to 1")
+    train_args.add_argument("--accum-steps", type=int, default=1, help="gradient accumulation steps. Default to 1")
     train_args.add_argument("--max-iters", type=int, default=5000)
     train_args.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     train_args.add_argument("--dtype", type=str, default="float32", choices=["float32", "float16", "bfloat16"])
